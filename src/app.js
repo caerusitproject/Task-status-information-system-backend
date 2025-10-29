@@ -1,8 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const sequelize = require('./db');
-//const employeeRoutes = require("./routes/employeeRoutes");
+
+// const sequelize = require('./db');
+const db = require('./models'); // import the file where all associations are defined
+const sequelize = db.sequelize;
+//const taskStatusInfo = require("./routes/employeeRoutes");
 
 const setupSwagger = require("./swagger");
 
@@ -20,12 +23,10 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-//app.use('/api', routes);
+app.use('/api/taskStatusInfo', require('./routes/taskStatusInfoRouter'));
 
 
 //app.use('/api/email/send', emailRoutes);
-
-
 
 
 
@@ -36,7 +37,7 @@ async function start() {
     console.log('Postgres connected');
 
     // Sync DB models (dev only). In production use migrations.
-    /*await sequelize.sync({ alter: true });*/
+    await sequelize.sync({ alter: true });
     console.log('Database synchronized');
 
     app.listen(PORT, () => {

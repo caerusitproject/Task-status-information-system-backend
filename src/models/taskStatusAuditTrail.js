@@ -1,19 +1,35 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../db");
 
-const User = sequelize.define("users", {
+const TaskStatusAuditTrail = sequelize.define("taskStatusAuditTrail", {
     id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   },
-  username: {
-    type: DataTypes.STRING,
-    allowNull: false,
+  task_status_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
-  auth_key: {
+  changed_field: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  new_value: {
     type: DataTypes.TEXT,
     allowNull: true,
+  },
+  old_value: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  changed_by:{
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  changed_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
   },
   created_at: {
     type: DataTypes.DATE,
@@ -25,16 +41,9 @@ const User = sequelize.define("users", {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
-  role: {
-    type: DataTypes.STRING,
-    // references: {
-    //   model: "Roles",
-    //   key: "name",
-    // },
-  },
  
 }, {
-  tableName: "users",
+  tableName: "taskStatusAuditTrail",
   timestamps: false,
   underscored: true,
   freezeTableName: true
@@ -42,4 +51,4 @@ const User = sequelize.define("users", {
 
 
 
-module.exports = User;
+module.exports = TaskStatusAuditTrail;

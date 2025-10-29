@@ -1,19 +1,39 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../db");
 
-const User = sequelize.define("users", {
+const TaskExecutionStatus = sequelize.define("taskExecutionStatus", {
     id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   },
-  username: {
+  project_name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  auth_key: {
+  task_title: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  description:{
     type: DataTypes.TEXT,
     allowNull: true,
+  },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  percentage_complete:{
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  start_time: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  end_time: {
+    type: DataTypes.DATE,
+    allowNull: true,    
   },
   created_at: {
     type: DataTypes.DATE,
@@ -25,16 +45,9 @@ const User = sequelize.define("users", {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
-  role: {
-    type: DataTypes.STRING,
-    // references: {
-    //   model: "Roles",
-    //   key: "name",
-    // },
-  },
  
 }, {
-  tableName: "users",
+  tableName: "taskExecutionStatus",
   timestamps: false,
   underscored: true,
   freezeTableName: true
@@ -42,4 +55,4 @@ const User = sequelize.define("users", {
 
 
 
-module.exports = User;
+module.exports = TaskExecutionStatus;
