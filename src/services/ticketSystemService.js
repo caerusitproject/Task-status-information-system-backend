@@ -103,7 +103,7 @@ static async editTicketingSystemInfo(data,body){
              return {  message:'Other Attributes not allowed',status:403}
           }
         console.log('edited Ticket System  Info___',ticketSystemEdit,body)
-        return {  message:'Application Edited Successfully',status:201}
+        return {  message:'Ticket System Edited Successfully',status:201}
          
         }else{
             return {message:'Ticket System  Id not found',status:403}
