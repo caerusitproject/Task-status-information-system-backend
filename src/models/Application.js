@@ -1,5 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../../config/db");
 
 const Application = sequelize.define("application", {
     id: {
@@ -10,6 +10,10 @@ const Application = sequelize.define("application", {
   name:{
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  description:{
+    type: DataTypes.TEXT,
+    allowNull: true,
   },
   created_at: {
     type: DataTypes.DATE,

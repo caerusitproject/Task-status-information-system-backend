@@ -6,29 +6,39 @@ const TicketStatusInfoService = require("../services/taskStatusInfoService");
 router.post("/create", async (req, res, next) => {
   try {
     const newStatusInfo = await TicketStatusInfoService.createTicketStatusInfo(req.body);
-    res.status(201).json({message: "Ticket Status Info created successfully", status: 200});
+    res.status(newStatusInfo.status).json({message: newStatusInfo.message, status: newStatusInfo.status});
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// router.get("/managers", authenticate, authorizeRoles("HR"), async (req, res) => {
-//   try {
-//     const managers = await EmployeeService.getEmployeesByRole("Manager");
-//     res.json(managers);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
 
-// router.get("/:id", authenticate, authorizeRoles("HR", "MANAGER"), async (req, res) => {
-//   try {
-//     const emp = await EmployeeService.getEmployeeById(req.params.id);
-//     if (!emp) return res.status(404).json({ message: "Employee not found" });
-//     res.json(emp);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
+router.get("/view", async (req, res, next) => {
+  try {
+    const newStatusInfo = await TicketStatusInfoService.getTicketStatusInfo(req.query);
+    res.status(newStatusInfo.status).json({
+      count: newStatusInfo.totalRecords,
+      rows: newStatusInfo.rows,
+      totalPages: newStatusInfo.totalPages,
+      currentPage: newStatusInfo.currentPage,
+      nextPage:newStatusInfo.nextPage,
+      previousPage:newStatusInfo.previousPage,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+router.patch("/edit/:ticketId", async (req, res, next) => {
+  try {
+    const newStatusInfo = await TicketStatusInfoService.editTicketStatusInfo(req.params,req.body);
+    res.status(newStatusInfo.status).json({
+        message:newStatusInfo.message,status:newStatusInfo.status
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;

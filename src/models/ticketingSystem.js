@@ -1,5 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../../config/db");
 
 const TicketingSystem = sequelize.define("ticketingSystem", {
     id: {
@@ -7,19 +7,11 @@ const TicketingSystem = sequelize.define("ticketingSystem", {
     primaryKey: true,
     autoIncrement: true,
   },
-  ticket_status_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  app_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  ticket_name:{
+  ticketing_system_name:{
     type: DataTypes.STRING,
     allowNull: true,
   },
-  ticket_description: {
+  ticketing_system_description: {
     type: DataTypes.STRING,
     allowNull: false,
   },

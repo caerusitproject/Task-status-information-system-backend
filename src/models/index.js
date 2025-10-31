@@ -1,5 +1,8 @@
-const sequelize = require("../db");
-const { Sequelize } = require("sequelize");
+const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = require("../../config/db");
+// const config = require('../../config/config').development;
+
+// const sequelize = new Sequelize(config.url, { dialect: 'postgres', logging: false });
 
 const dbInfo = {};
 
@@ -20,6 +23,15 @@ Object.entries(dbInfo).forEach(([key, value]) => {
     console.log(`   ⚠️  ${key} -> Not a Sequelize model class or missing init()`);
   }
 });
+
+
+// Associations
+// User.hasMany(Task, { foreignKey: 'createdBy' });
+// Task.belongsTo(User, { foreignKey: 'createdBy' });
+
+// Task.hasMany(Audit, { foreignKey: 'taskId' });
+// Audit.belongsTo(Task, { foreignKey: 'taskId' });
+
 
 
 
@@ -63,3 +75,12 @@ sequelize
   .catch((err) => console.error("❌ Model sync failed:", err));
 
 module.exports = dbInfo;
+
+// module.exports = {
+//   sequelize,
+//   Sequelize,
+//   User,
+//   Task,
+//   Setting,
+//   Audit
+// };

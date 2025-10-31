@@ -1,5 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../../config/db");
 const { application } = require("express");
 const { create } = require("handlebars");
 
@@ -9,23 +9,27 @@ const TaskStatusInfo = sequelize.define("taskStatusInfo", {
     primaryKey: true,
     autoIncrement: true,
   },
+    ticket_id:{
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   task_title: {
     type: DataTypes.STRING,
     allowNull: false,
   },
   task_type: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('Assign','Issue'), defaultValue: 'Assign' ,
     allowNull: false,
   },
-  application_name:{
-    type: DataTypes.STRING,
-    allowNull: true,
+  application_id:{
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  ticketing_system_id:{
+  type: DataTypes.INTEGER,
+    allowNull: false,
   },
   module: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  ticket_id:{
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -33,16 +37,12 @@ const TaskStatusInfo = sequelize.define("taskStatusInfo", {
     type: DataTypes.STRING,
     allowNull: false,
   },
- percentage_complete:{
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
   execution_note:{
     type: DataTypes.TEXT,
     allowNull: false,
     },
   created_by:{
-    type: DataTypes.STRING,
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   created_at: {
