@@ -23,6 +23,9 @@ app.use(express.json());
 
 // Route Handling
 app.use('/api/taskStatusInfo', require('./src/routes/taskStatusInfoRouter'));
+app.use('/api/application', require('./src/routes/applicationRouter'));
+app.use('/api/ticketingSystem', require('./src/routes/ticketingSystemRouter'));
+
 
 // app.post('/api/auth/register', authController.register);
 // app.post('/api/auth/login', authController.login);

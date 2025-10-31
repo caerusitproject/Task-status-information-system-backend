@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 // const { authenticate, authorizeRoles } = require("../middleware/authEmpMiddleware");
-const TicketStatusInfoService = require("../services/taskStatusInfoService");
+const ApplicationInfoService = require("../services/applicationService");
 
 router.post("/create", async (req, res, next) => {
   try {
-    const newStatusInfo = await TicketStatusInfoService.createTicketStatusInfo(req.body);
+    const newStatusInfo = await ApplicationInfoService.createApplicationInfo(req.body);
     res.status(newStatusInfo.status).json({message: newStatusInfo.message, status: newStatusInfo.status});
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -15,7 +15,7 @@ router.post("/create", async (req, res, next) => {
 
 router.get("/view", async (req, res, next) => {
   try {
-    const newStatusInfo = await TicketStatusInfoService.getTicketStatusInfo(req.query);
+    const newStatusInfo = await ApplicationInfoService.getApplicationInfo(req.query);
     res.status(newStatusInfo.status).json({
       count: newStatusInfo.totalRecords,
       rows: newStatusInfo.rows,
@@ -30,9 +30,9 @@ router.get("/view", async (req, res, next) => {
 });
 
 
-router.put("/edit/:ticketId", async (req, res, next) => {
+router.put("/edit/:appId", async (req, res, next) => {
   try {
-    const newStatusInfo = await TicketStatusInfoService.editTicketStatusInfo(req.params,req.body);
+    const newStatusInfo = await ApplicationInfoService.editApplicationInfo(req.params,req.body);
     res.status(newStatusInfo.status).json({
         message:newStatusInfo.message,status:newStatusInfo.status
     });
