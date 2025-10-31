@@ -14,7 +14,7 @@ class TaskStatusInfoService {
     const { task_title, task_type,module,ticket_id,status,percentage_complete,execution_note,created_by,application_id,ticketing_system_id } = data;
 
     // Validate and create the ticket status info
-    if(!data.task_title || !data.task_type || !data.status || !data.created_by || !data.percentage_complete || !data.ticket_id || !data.module || !data.created_by || !data.ticketing_system_id || !data.application_id){
+    if(!data.task_title || !data.task_type || !data.status || !data.ticket_id || !data.module || !data.ticketing_system_id || !data.application_id || !data.execution_note){
       return { message: "Invalid data provided", status: 400 };
     }
     const taskStatusInfo = await TaskStatusInfo.create({
@@ -25,9 +25,9 @@ class TaskStatusInfoService {
       ticketing_system_id : ticketing_system_id ?  ticketing_system_id:'',
       ticket_id: ticket_id ? ticket_id : '',
       status: status ? status : '',
-      percentage_complete: percentage_complete ? percentage_complete : 0,
+      // percentage_complete: percentage_complete ? percentage_complete : 0,
       execution_note: execution_note ? execution_note : '',
-      created_by: created_by ? created_by : ''
+      // created_by: created_by ? created_by : ''
     });
 
     return { message: "Ticket Status Info created successfully", status: 200 };
