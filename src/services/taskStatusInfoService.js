@@ -25,7 +25,6 @@ class TaskStatusInfoService {
       ticketing_system_id : ticketing_system_id ?  ticketing_system_id:'',
       ticket_id: ticket_id ? ticket_id : '',
       status: status ? status : '',
-      // percentage_complete: percentage_complete ? percentage_complete : 0,
       execution_note: execution_note ? execution_note : '',
       // created_by: created_by ? created_by : ''
     });

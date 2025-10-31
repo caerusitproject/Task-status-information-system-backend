@@ -17,10 +17,13 @@ const TaskStatusInfo = sequelize.define("taskStatusInfo", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  task_type: {
-    type: DataTypes.ENUM('Assign','Issue'), defaultValue: 'Assign' ,
-    allowNull: false,
-  },
+ task_type: {
+  type: DataTypes.ENUM({
+    values: ["Assign", "Issue"],
+    name: "task_type_enum", // make it column-specific
+  }),
+  allowNull: false,
+},
   application_id:{
     type: DataTypes.INTEGER,
     allowNull: false,

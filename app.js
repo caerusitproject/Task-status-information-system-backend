@@ -37,7 +37,7 @@ app.use('/api/ticketingSystem', require('./src/routes/ticketingSystemRouter'));
 // app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-sequelize.authenticate().then(() => sequelize.sync({ alter: true })).then(() => {
+sequelize.authenticate().then(() => sequelize.sync({ alter: false })).then(() => {
   app.listen(PORT, (err) => {
     if (err) {
       console.error('Error starting server:', err);
