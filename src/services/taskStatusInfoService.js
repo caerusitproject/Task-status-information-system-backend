@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { TaskStatusInfo, Role, EmployeeRole } = require("../models");
+const { TaskStatusInfo, Role, EmployeeRole,Application,TicketingSystem } = require("../models");
 const { raw } = require("body-parser");
 const { where } = require("sequelize");
 require("dotenv").config();
@@ -17,19 +17,36 @@ class TaskStatusInfoService {
     if(!data.task_title || !data.task_type || !data.status || !data.ticket_id || !data.module || !data.ticketing_system_id || !data.application_id || !data.execution_note){
       return { message: "Invalid data provided", status: 400 };
     }
-    const taskStatusInfo = await TaskStatusInfo.create({
-      task_title: task_title ? task_title : '',
-      task_type: task_type ? task_type : '',
-      module: module ? module : '',
-      application_id:application_id ? application_id :'',
-      ticketing_system_id : ticketing_system_id ?  ticketing_system_id:'',
-      ticket_id: ticket_id ? ticket_id : '',
-      status: status ? status : '',
-      execution_note: execution_note ? execution_note : '',
-      // created_by: created_by ? created_by : ''
-    });
 
-    return { message: "Ticket Status Info created successfully", status: 200 };
+    const allTicketingSystem= await TicketingSystem.findAll({raw:true})
+    const ApplicationSystem= await Application.findAll({raw:true})
+    
+    if(allTicketingSystem && allTicketingSystem.length > 0 && ApplicationSystem && ApplicationSystem.length > 0){
+      let mappedApplciationId=ApplicationSystem.map((item)=>item.id)
+      let mappedTicketingSystem=allTicketingSystem.map((item)=>item.id)
+
+      if(mappedTicketingSystem.includes(ticketing_system_id) && mappedApplciationId.includes(application_id)){
+        console.log('you can enter the value')
+        const taskStatusInfo = await TaskStatusInfo.create({
+          task_title: task_title ? task_title : '',
+          task_type: task_type ? task_type : '',
+          module: module ? module : '',
+          application_id:application_id ? application_id :'',
+          ticketing_system_id : ticketing_system_id ?  ticketing_system_id:'',
+          ticket_id: ticket_id ? ticket_id : '',
+          status: status ? status : '',
+          execution_note: execution_note ? execution_note : '',
+          // created_by: created_by ? created_by : ''
+        });
+        return { message: "Ticket Status Info created successfully", status: 200 };
+      }else{
+         return { message: "Please enter correct Application or Ticketing System Id", status: 403 };
+      }
+    }else {
+       return { message: "Please provide Application or Ticketing System Id to proceed", status: 403 };
+    }
+
+
   }
 
 //     return { accessToken, refreshToken };

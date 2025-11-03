@@ -14,9 +14,10 @@ class ApplicationInfoService {
     const { applicationName, applicationDescription} = data;
 
     // Validate and create the Application status info
-    if(!data.applicationName || !data.applicationDescription){
+    if(!data.applicationName || data.applicationName == null || data.applicationDescription == null){
       return { message: "Invalid data provided", status: 400 };
     }
+
     const applicationInfo = await Application.create({
      name:applicationName,
      description:applicationDescription

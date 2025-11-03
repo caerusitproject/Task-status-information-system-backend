@@ -14,9 +14,10 @@ class TicketingSystemService {
     const { ticketSystemName, ticketSystemDescription} = data;
 
     // Validate and create the Application status info
-    if(!data.ticketSystemName || !data.ticketSystemDescription){
+    if(!data.ticketSystemName || data.ticketSystemName == null || data.ticketSystemDescription == null){
       return { message: "Invalid data provided", status: 400 };
     }
+
     const ticketingSystemInfo = await TicketingSystem.create({
      ticketing_system_name:ticketSystemName,
      ticketing_system_description:ticketSystemDescription
