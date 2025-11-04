@@ -71,9 +71,9 @@ exports.taskPdf = async (req, res, next) => {
       endDate,
       weeklySummary,
     };
-    // if(weeklySummary && weeklySummary.message.length > 0  && weeklySummary.status.length > 0){
-    //    res.status(weeklySummary.status).json({message: weeklySummary.message, status: weeklySummary.status});
-    // }
+    if(weeklySummary && weeklySummary.length == 0 ){
+       res.status(403).json({message: "Pdf Cannot be generated", status: 403});
+    }
     // 3️⃣ Define a valid file path
     const filePath = path.join(__dirname, "../reports/Weekly_Task_Summary.pdf");
     // Ensure folder exists

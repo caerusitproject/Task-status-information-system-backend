@@ -137,9 +137,9 @@ exports.getWeeklyStatusSummary= async( startDate, endDate )=> {
   });
 
   console.log('pdf____',results)
-  
+
   if(results && results.length == 0){
-    return {message:"Pdf not generated", status:403}
+    return []
   }
 
   const formatted =results && results.length > 0 && results.map((row,ind) => ({
