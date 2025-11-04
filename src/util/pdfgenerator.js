@@ -111,12 +111,12 @@ exports.generateWeeklySummaryPDF = async (data, filePath) => {
   // FOOTER
   // ───────────────────────────────
   doc.moveDown(2);
-  doc.font("Helvetica").fontSize(12)
-    .text("Manager Review: ✓ Approved / ✗ Rework Needed", {
-      align: "left",
-      continued: false,
-      width: 500, // prevents wrapping
-    });
+  // doc.font("Helvetica").fontSize(12)
+  //   .text("Manager Review: ✓ Approved / ✗ Rework Needed", {
+  //     align: "left",
+  //     continued: false,
+  //     width: 500, // prevents wrapping
+  //   });
 
   doc.end();
 

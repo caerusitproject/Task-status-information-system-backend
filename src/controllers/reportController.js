@@ -64,18 +64,18 @@ exports.taskPdf = async (req, res, next) => {
 
     // 2️⃣ Prepare the report data
 
-    if(weeklySummary && weeklySummary instanceof Object){
-       res.status(weeklySummary.status).json({message: weeklySummary.message, status: weeklySummary.status});
-    }
+    console.log('path____________',weeklySummary)
+    
     const reportData = {
       startDate,
       endDate,
       weeklySummary,
     };
-
+    // if(weeklySummary && weeklySummary.message.length > 0  && weeklySummary.status.length > 0){
+    //    res.status(weeklySummary.status).json({message: weeklySummary.message, status: weeklySummary.status});
+    // }
     // 3️⃣ Define a valid file path
     const filePath = path.join(__dirname, "../reports/Weekly_Task_Summary.pdf");
-    console.log('path____________',filePath)
     // Ensure folder exists
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
