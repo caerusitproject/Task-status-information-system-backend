@@ -1,6 +1,8 @@
-const ExcelJS = require('exceljs');
+// const ExcelJS = require('exceljs');
+const { Op, fn, col, literal } = require("sequelize");
+const { sequelize } = require("../models");
 const PDFDocument = require('pdfkit');
-const { Task, User } = require('../models');
+const { TaskStatusInfo, User } = require('../models');
 const streamBuffers = require('stream-buffers');
 
 exports.generateTasksExcel = async () => {
@@ -38,19 +40,55 @@ exports.generateTasksExcel = async () => {
   return buf;
 };
 
-exports.generateTasksPdf = async () => {
-  const tasks = await Task.findAll({ order: [['createdAt','DESC']] });
+exports.generateTasksPdf = async ({employeeName,startDate,endDate}) => {
+  // const tasks = await TaskStatusInfo.findAll({ order: [['created_at','DESC']] });
+  console.log('datesss',new Date(startDate), new Date(endDate))
+  const tasks = await TaskStatusInfo.findAll({
+  where: {
+    created_at: { [Op.between]: [new Date(startDate), new Date(endDate)] },
+  },
+  attributes: [
+    "status",
+    [fn("DATE_PART", "week", col("created_at")), "weekNumber"], // ✅ PostgreSQL syntax
+  ],
+  raw: true,
+});
   const doc = new PDFDocument({ margin: 30, size: 'A4' });
   const writable = new streamBuffers.WritableStreamBuffer();
 
   doc.fontSize(16).text('Tasks Report', { align: 'center' }).moveDown();
 
-  tasks.forEach((t, idx) => {
-    doc.fontSize(12).text(`${idx+1}. ${t.taskTitle} [${t.status}]`);
-    doc.fontSize(10).text(`Type: ${t.taskType} | App: ${t.applicationName} | Module: ${t.module}`);
-    doc.fontSize(10).text(`% Complete: ${t.percentageComplete} | Created At: ${t.createdAt}`);
-    doc.moveDown(0.5);
-  });
+  // tasks.forEach((t, idx) => {
+  //   doc.fontSize(12).text(`${idx+1}. ${t.taskTitle} [${t.status}]`);
+  //   doc.fontSize(10).text(`Type: ${t.taskType} | App: ${t.applicationName} | Module: ${t.module}`);
+  //   doc.fontSize(10).text(`Created At: ${t.createdAt}`);
+  //   doc.moveDown(0.5);
+  // });
+
+    const summary = Array.from({ length: 4 }, () => ({
+    totalTasks: 0,
+    completed: 0,
+    inProgress: 0,
+    blocked: 0,
+    totalHours: 0,
+  }));
+
+  // Process each record
+  for (const task of tasks) {
+    // Calculate which week of the month it belongs to
+    const date = new Date(task.date);
+    const weekOfMonth = Math.ceil(date.getDate() / 7) - 1; // 0-based index
+    const current = summary[weekOfMonth] || summary[3]; // if out of range, last week
+
+    current.totalTasks += 1;
+    current.totalHours += task.timeSpent || 0;
+
+    if (task.status === "Completed") current.completed += 1;
+    else if (task.status === "In Progress") current.inProgress += 1;
+    else if (task.status === "Blocked") current.blocked += 1;
+  }
+
+  // return summary;
 
   doc.end();
 
@@ -63,3 +101,262 @@ exports.generateTasksPdf = async () => {
     writable.on('error', reject);
   });
 };
+
+exports.getWeeklyStatusSummary= async( startDate, endDate )=> {
+  const query = `
+    SELECT
+      TO_CHAR(DATE_TRUNC('week', created_at), 'YYYY-MM-DD') AS week_start_date,
+
+      -- Counts per status
+      COUNT(*) FILTER (WHERE status ILIKE 'Completed') AS completed_count,
+      COUNT(*) FILTER (WHERE status ILIKE 'in progress') AS in_progress_count,
+      COUNT(*) FILTER (WHERE status ILIKE 'blocked') AS blocked_count,
+      COUNT(*) FILTER (WHERE status ILIKE 'assigned') AS assigned_count,
+
+      -- Week-level totals
+      COUNT(*) AS total_records_in_week,
+
+      -- Total working hours = sum of (updated_at - created_at)
+      ROUND(SUM(EXTRACT(EPOCH FROM (updated_at - created_at)) / 3600), 2) AS total_work_hours,
+
+      -- Optional: activity this week
+      COUNT(*) FILTER (WHERE DATE_TRUNC('week', created_at) = DATE_TRUNC('week', NOW())) AS created_this_week,
+      COUNT(*) FILTER (WHERE DATE_TRUNC('week', updated_at) = DATE_TRUNC('week', NOW())) AS updated_this_week
+
+    FROM public."taskStatusInfo"
+    WHERE created_at >= :startDate
+      AND created_at < :endDate
+
+    GROUP BY DATE_TRUNC('week', created_at)
+    ORDER BY week_start_date;
+  `;
+
+  const results = await sequelize.query(query, {
+    replacements: { startDate, endDate },
+    type: sequelize.QueryTypes.SELECT,
+  });
+
+  console.log('pdf____',results)
+  
+  if(results && results.length == 0){
+    return {message:"Pdf not generated", status:403}
+  }
+
+  const formatted =results && results.length > 0 && results.map((row,ind) => ({
+    week_start_date: `Week ${ind + 1}`,
+    completed_count: Number(row.completed_count) || 0,
+    in_progress_count: Number(row.in_progress_count) || 0,
+    blocked_count: Number(row.blocked_count) || 0,
+    assigned_count: Number(row.assigned_count) || 0,
+    total_records_in_week: Number(row.total_records_in_week) || 0,
+    total_work_hours: Number(row.total_work_hours) || 0,
+    created_this_week: Number(row.created_this_week) || 0,
+    updated_this_week: Number(row.updated_this_week) || 0,
+  }));
+
+  return formatted;
+
+  // return results;
+}
+
+
+// exports.getWeeklyStatusSummary = async ({ startDate, endDate }) => {
+//   const result = await TaskStatusInfo.findAll({
+//     attributes: [
+//       // Week start date
+//       [
+//         fn('TO_CHAR', fn('DATE_TRUNC', 'week', col('created_at')), 'YYYY-MM-DD'),
+//         'week_start_date',
+//       ],
+
+//       // Counts per status
+//       [
+//         literal(`COUNT(*) FILTER (WHERE status ILIKE 'Completed')`),
+//         'completed_count',
+//       ],
+//       [
+//         literal(`COUNT(*) FILTER (WHERE status ILIKE 'in progress')`),
+//         'in_progress_count',
+//       ],
+//       [
+//         literal(`COUNT(*) FILTER (WHERE status ILIKE 'blocked')`),
+//         'blocked_count',
+//       ],
+//       [
+//         literal(`COUNT(*) FILTER (WHERE status ILIKE 'ASSIGNED')`),
+//         'assigned_count',
+//       ],
+
+//       // Total records in week
+//       [fn('COUNT', literal('*')), 'total_records_in_week'],
+
+//       // Total working hours
+//       [
+//         literal(`ROUND(SUM(EXTRACT(EPOCH FROM (updated_at - created_at)) / 3600), 2)`),
+//         'total_work_hours',
+//       ],
+
+//       // Created/updated this week
+//       [
+//         literal(`COUNT(*) FILTER (WHERE DATE_TRUNC('week', created_at) = DATE_TRUNC('week', NOW()))`),
+//         'created_this_week',
+//       ],
+//       [
+//         literal(`COUNT(*) FILTER (WHERE DATE_TRUNC('week', updated_at) = DATE_TRUNC('week', NOW()))`),
+//         'updated_this_week',
+//       ],
+//     ],
+
+//     where: {
+//       [Op.or]: [
+//         literal(`created_at >= DATE_TRUNC('week', NOW() - INTERVAL '4 weeks')`),
+//         literal(`updated_at >= DATE_TRUNC('week', NOW() - INTERVAL '4 weeks')`),
+//       ],
+//     },
+
+//     group: [literal(`DATE_TRUNC('week', created_at)`)],
+//     order: [literal(`DATE_TRUNC('week', created_at) ASC`)],
+//     raw: true,
+//   });
+
+//   // 🔹 Format and clean up the results
+//   const formatted = result.map((row) => ({
+//     week_start_date: row.week_start_date,
+//     completed_count: Number(row.completed_count) || 0,
+//     in_progress_count: Number(row.in_progress_count) || 0,
+//     blocked_count: Number(row.blocked_count) || 0,
+//     assigned_count: Number(row.assigned_count) || 0,
+//     total_records_in_week: Number(row.total_records_in_week) || 0,
+//     total_work_hours: Number(row.total_work_hours) || 0,
+//     created_this_week: Number(row.created_this_week) || 0,
+//     updated_this_week: Number(row.updated_this_week) || 0,
+//   }));
+
+//   return formatted;
+// };
+
+
+// exports.getWeeklyStatusSummary= async ({startDate, endDate})=> {
+//   // const result = await TaskStatusInfo.findAll({
+//   //   where: {
+//   //     created_at: { [Op.between]: [startDate, endDate] },
+//   //   },
+//   //   attributes: [
+//   //     [literal(`DATE_PART('week', "created_at")`), "weekNumber"],
+//   //     "status",
+//   //     [fn("COUNT", col("id")), "taskCount"],
+//   //     [
+//   //       fn(
+//   //         "SUM",
+//   //         literal(`EXTRACT(EPOCH FROM ("updated_at" - "created_at")) / 3600`)
+//   //       ),
+//   //       "totalHours",
+//   //     ],
+//   //   ],
+//   //   group: [literal(`DATE_PART('week', "created_at")`), "status"],
+//   //   order: [literal(`DATE_PART('week', "created_at")`)],
+//   //   raw: true,
+//   // });
+
+
+
+//    const result = await TaskStatusInfo.findAll({
+//     attributes: [
+//       // Week start date
+//       [
+//         fn('TO_CHAR', fn('DATE_TRUNC', 'week', col('created_at')), 'YYYY-MM-DD'),
+//         'week_start_date'
+//       ],
+
+//       // Counts per status
+//       [
+//         literal(`COUNT(*) FILTER (WHERE status ILIKE 'Completed')`),
+//         'completed_count'
+//       ],
+//       [
+//         literal(`COUNT(*) FILTER (WHERE status ILIKE 'in progress')`),
+//         'in_progress_count'
+//       ],
+//       [
+//         literal(`COUNT(*) FILTER (WHERE status ILIKE 'blocked')`),
+//         'blocked_count'
+//       ],
+//       [
+//         literal(`COUNT(*) FILTER (WHERE status ILIKE 'ASSIGNED')`),
+//         'assigned_count'
+//       ],
+
+//       // Total records in week
+//       [fn('COUNT', literal('*')), 'total_records_in_week'],
+
+//       // Total working hours (difference between updated_at and created_at)
+//       [
+//         literal(`ROUND(SUM(EXTRACT(EPOCH FROM (updated_at - created_at)) / 3600), 2)`),
+//         'total_work_hours'
+//       ],
+
+//       // Activity this week
+//       [
+//         literal(`COUNT(*) FILTER (WHERE DATE_TRUNC('week', created_at) = DATE_TRUNC('week', NOW()))`),
+//         'created_this_week'
+//       ],
+//       [
+//         literal(`COUNT(*) FILTER (WHERE DATE_TRUNC('week', updated_at) = DATE_TRUNC('week', NOW()))`),
+//         'updated_this_week'
+//       ],
+//     ],
+
+//     // WHERE clause: only last 4 weeks
+//     where: {
+//       [Op.or]: [
+//         literal(`created_at >= DATE_TRUNC('week', NOW() - INTERVAL '4 weeks')`),
+//         literal(`updated_at >= DATE_TRUNC('week', NOW() - INTERVAL '4 weeks')`)
+//       ]
+//     },
+
+//     // GROUP BY week
+//     group: [literal(`DATE_TRUNC('week', created_at)`)],
+
+//     // ORDER BY week_start_date
+//     order: [literal(`week_start_date ASC`)],
+
+//     raw: true, // ensures plain JSON output
+//   });
+
+// console.log('query o/p___',result)
+//   // Combine data by week
+//   const weeks = {};
+//   result.forEach((row) => {
+//     const week = Math.floor(row.weekNumber);
+//     if (!weeks[week]) {
+//       weeks[week] = {
+//         totalTasks: 0,
+//         completed: 0,
+//         inProgress: 0,
+//         blocked: 0,
+//         totalHours: 0,
+//       };
+//     }
+
+//     weeks[week].totalTasks += parseInt(row.taskCount);
+//     weeks[week].totalHours += parseFloat(row.totalHours || 0);
+
+//     // if (row.status.toLowerCase() === "completed") weeks[week].completed += parseInt(row.taskCount);
+//     // if (row.status.toLowerCase() === "in progress") weeks[week].inProgress += parseInt(row.taskCount);
+//     // if (row.status.toLowerCase() === "blocked") weeks[week].blocked += parseInt(row.taskCount);
+//   });
+
+//   // Convert object to array sorted by week
+//   console.log('keys ____',weeks)
+//   return Object.keys(weeks)
+//     .sort((a, b) => a - b)
+//     .map((w, i) => ({
+//       week: `Week ${i + 1}`,
+//       totalTasks: weeks[w].total_records_in_week,
+//       completed: weeks[w].completed_count,
+//       inProgress: weeks[w].in_progress_count,
+//       blocked: weeks[w].blocked_count,
+//       totalHours: weeks[w].total_work_hours,
+//     }));
+// }
+

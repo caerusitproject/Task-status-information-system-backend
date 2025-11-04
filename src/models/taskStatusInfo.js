@@ -58,9 +58,11 @@ const TaskStatusInfo = sequelize.define("taskStatusInfo", {
  
 }, {
   tableName: "taskStatusInfo",
-  timestamps: false,
+  timestamps: true,
   underscored: true,
-  freezeTableName: true
+  freezeTableName: true,
+  createdAt: "created_at", // ✅ map to your snake_case field
+  updatedAt: "updated_at",
 });
 
 

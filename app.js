@@ -27,17 +27,21 @@ app.use('/api/application', require('./src/routes/applicationRouter'));
 app.use('/api/ticketingSystem', require('./src/routes/ticketingSystemRouter'));
 
 
+//Report Generate
+// app.use('/api/pdfWeekly', require())
+app.post('/api/reports/pdf', reportController.taskPdf);
+
+
 // app.post('/api/auth/register', authController.register);
 // app.post('/api/auth/login', authController.login);
 
 // app.use('/api/tasks', auth.authenticate, taskController.router);
 // app.use('/api/admin', auth.authenticate, adminController.router);
 // app.get('/api/reports/tasks.xlsx', auth.authenticate, reportController.taskExcel);
-// app.get('/api/reports/tasks.pdf', auth.authenticate, reportController.taskPdf);
 // app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-sequelize.authenticate().then(() => sequelize.sync({ alter: false })).then(() => {
+sequelize.authenticate().then(() => sequelize.sync({ alter: true })).then(() => {
   app.listen(PORT, (err) => {
     if (err) {
       console.error('Error starting server:', err);
