@@ -28,7 +28,9 @@ app.use('/api/ticketingSystem', require('./src/routes/ticketingSystemRouter'));
 
 
 //Report Generate
-// app.use('/api/pdfWeekly', require())
+//Weekly Report Get Call
+
+app.use('/api/reports/weekly',require('./src/routes/reportRouter'))
 app.post('/api/reports/pdf', reportController.taskPdf);
 
 
