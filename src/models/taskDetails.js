@@ -1,58 +1,32 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../../config/db");
-const { application } = require("express");
-const { create } = require("handlebars");
 
-const TaskStatusInfo = sequelize.define(
-  "taskStatusInfo",
+const TaskDetail = sequelize.define(
+  "taskDetail",
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    ticket_id: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    task_title: {
-      type: DataTypes.STRING,
+    taskId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     task_type: {
       type: DataTypes.ENUM("Assign", "Issue", "Change Request", "Ticket Less"), // ✅ no custom name
       allowNull: false,
     },
-    application_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    ticketing_system_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    module: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    status: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    description: {
+    daily_accomplishment: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true,
     },
-    statement_of_the_issue: {
+    rca_investigation: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true,
     },
-    color_row: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    created_by: {
-      type: DataTypes.INTEGER,
+    resolution_and_steps: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     created_at: {
@@ -67,7 +41,7 @@ const TaskStatusInfo = sequelize.define(
     },
   },
   {
-    tableName: "taskStatusInfo",
+    tableName: "taskDetail",
     timestamps: true,
     underscored: true,
     freezeTableName: true,
@@ -76,4 +50,4 @@ const TaskStatusInfo = sequelize.define(
   }
 );
 
-module.exports = TaskStatusInfo;
+module.exports = TaskDetail;

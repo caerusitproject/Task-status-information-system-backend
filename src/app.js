@@ -1,62 +1,67 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
+require("dotenv").config();
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+// const { sequelize } = require('./src/models');
 
-// const sequelize = require('./db');
-const db = require('./models'); // import the file where all associations are defined
+const db = require("./models"); // import the file where all associations are defined
 const sequelize = db.sequelize;
-//const taskStatusInfo = require("./routes/employeeRoutes");
-
-const setupSwagger = require("./swagger");
-
-//const payrollRoutes = require('./routes/payroll/payrollRoutes');
-const app = express();
-const cors = require('cors');
-const path = require('path')
 const PORT = process.env.PORT || 5000;
+
+const auth = require("./middlewares/auth");
+const errorHandler = require("./middlewares/errorHandler");
+const authController = require("./controllers/authController");
+const taskController = require("./controllers/taskController");
+const adminController = require("./controllers/adminController");
+const reportController = require("./controllers/reportController");
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
 
 app.use(express.json());
 
+// Route Handling
+app.use("/api/taskStatusInfo", require("./routes/taskStatusInfoRouter"));
+app.use("/api/application", require("./routes/applicationRouter"));
+app.use("/api/ticketingSystem", require("./routes/ticketingSystemRouter"));
 
+//Report Generate
+//Weekly Report Get Call
 
-// Swagger
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/api/taskStatusInfo', require('./routes/taskStatusInfoRouter'));
-
+app.use("/api/reports/weekly", require("./routes/reportRouter"));
+app.post("/api/reports/pdf", reportController.taskPdf);
 
 //app.use('/api/email/send', emailRoutes);
-
-
-
 
 async function start() {
   try {
     await sequelize.authenticate();
-    console.log('Postgres connected');
+    console.log("Postgres connected");
 
     // Sync DB models (dev only). In production use migrations.
     await sequelize.sync({ alter: true });
-    console.log('Database synchronized');
+
+    console.log("Database synchronized");
 
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
   } catch (err) {
-    console.error('Failed to start app', err);
+    console.error("Failed to start app", err);
     process.exit(1);
   }
 }
 
 // 🧹 Graceful shutdown handler
-process.on('SIGINT', async () => {
-  console.log('\n🛑 Caught SIGINT, closing database connection...');
+process.on("SIGINT", async () => {
+  console.log("\n🛑 Caught SIGINT, closing database connection...");
   await db.sequelize.close();
-  console.log('✅ Database connection closed. Exiting...');
+  console.log("✅ Database connection closed. Exiting...");
   process.exit(0);
 });
 
-
-
-start().catch(err => { console.error(err); process.exit(1); });
+start().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
