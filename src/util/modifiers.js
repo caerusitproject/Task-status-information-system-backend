@@ -10,7 +10,9 @@ exports.getStartAndEndOfMonth = (year, month) => {
     endDate: format(endDate),
   };
 };
-
+// YYYY-MM-DD
+// next --> endDate + 1
+// prev --> startDate -1
 exports.generateFourWeekRanges = (dateStr) => {
   const inputDate = new Date(dateStr);
 

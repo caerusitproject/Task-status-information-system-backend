@@ -1,0 +1,77 @@
+const express = require("express");
+const router = express.Router();
+// const { authenticate, authorizeRoles } = require("../middleware/authEmpMiddleware");
+const TaskStatusInfo = require("../services/taskStatusInfoService");
+
+router.get("/dates/:currentDate", async (req, res, next) => {
+  try {
+    const newStatusInfo = await TaskStatusInfo.createViewDatesDropdown(
+      req.params
+    );
+    res.status(newStatusInfo.status).json({
+      message: newStatusInfo.message,
+      content: newStatusInfo.content,
+      status: newStatusInfo.status,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.post("/create/:taskType", async (req, res, next) => {
+  try {
+    const newStatusInfo = await TaskStatusInfo.createTimeSheetStatusInfo(
+      req.params,
+      req.body
+    );
+    res.status(newStatusInfo.status).json({
+      message: newStatusInfo.message,
+      status: newStatusInfo.status,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/viewbyId", async (req, res, next) => {
+  try {
+    const newStatusInfo = await TaskStatusInfo.getTimeSheetById(req.body);
+    res.status(newStatusInfo.status).json({
+      message: newStatusInfo.message,
+      content: newStatusInfo.content,
+      status: newStatusInfo.status,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.put("/editTaskId/:taskId", async (req, res, next) => {
+  try {
+    const newStatusInfo = await TaskStatusInfo.editTaskSheetInfo(
+      req.params,
+      req.body
+    );
+    res.status(newStatusInfo.status).json({
+      message: newStatusInfo.message,
+      status: newStatusInfo.status,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/legends-colors", async (req, res, next) => {
+  try {
+    const newStatusInfo = await TaskStatusInfo.getLegendsColorsandId();
+    res.status(newStatusInfo.status).json({
+      message: newStatusInfo.message,
+      content: newStatusInfo.content,
+      status: newStatusInfo.status,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+module.exports = router;

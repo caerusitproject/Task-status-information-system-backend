@@ -1,7 +1,5 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const { application } = require("express");
-const { create } = require("handlebars");
 
 const TaskStatusInfo = sequelize.define(
   "taskStatusInfo",
@@ -11,16 +9,36 @@ const TaskStatusInfo = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+    task_code: {
+      type: DataTypes.STRING,
+    },
+    sr_no: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     ticket_id: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    requestedBy: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    reportedBy: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     task_title: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     task_type: {
-      type: DataTypes.ENUM("Assign", "Issue", "Change Request", "Ticket Less"), // ✅ no custom name
+      type: DataTypes.ENUM(
+        "assignment",
+        "issue",
+        "change_request",
+        "ticket_less"
+      ),
       allowNull: false,
     },
     application_id: {
@@ -48,7 +66,7 @@ const TaskStatusInfo = sequelize.define(
       allowNull: false,
     },
     color_row: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     created_by: {
@@ -71,9 +89,34 @@ const TaskStatusInfo = sequelize.define(
     timestamps: true,
     underscored: true,
     freezeTableName: true,
-    createdAt: "created_at", // ✅ map to your snake_case field
+    createdAt: "created_at",
     updatedAt: "updated_at",
   }
 );
+
+// ✅ Hook to generate `task_code` based on `task_type` & auto-incremented `id`
+TaskStatusInfo.addHook("afterCreate", async (task) => {
+  let prefix;
+
+  switch (task.task_type) {
+    case "assignment":
+      prefix = "AS";
+      break;
+    case "issue":
+      prefix = "IS";
+      break;
+    case "change_request":
+      prefix = "CR";
+      break;
+    case "ticket_less":
+      prefix = "TL";
+      break;
+  }
+
+  const formattedId = task.id.toString().padStart(2, "0"); // 1 → 01
+  const newCode = `${prefix}-${formattedId}`;
+
+  await task.update({ task_code: newCode });
+});
 
 module.exports = TaskStatusInfo;

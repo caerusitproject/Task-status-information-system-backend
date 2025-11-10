@@ -25,6 +25,7 @@ app.use(express.json());
 app.use("/api/taskStatusInfo", require("./routes/taskStatusInfoRouter"));
 app.use("/api/application", require("./routes/applicationRouter"));
 app.use("/api/ticketingSystem", require("./routes/ticketingSystemRouter"));
+app.use("/api/timeSheet", require("./routes/timesheetRouter"));
 
 //Report Generate
 //Weekly Report Get Call

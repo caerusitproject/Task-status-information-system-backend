@@ -14,6 +14,7 @@ dbInfo.TaskExecutionStatus = require("./taskExecutionStatus");
 dbInfo.TaskStatusAuditTrail = require("./taskStatusAuditTrail");
 dbInfo.TaskStatusInfo = require("./taskStatusInfo");
 dbInfo.TaskDetail = require("./taskDetails");
+dbInfo.Colors = require("./colors");
 
 // 🧩 Debug: Log model import status
 console.log("🧠 Model files loaded:");

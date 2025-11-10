@@ -7,6 +7,7 @@ const {
   Application,
   TicketingSystem,
 } = require("../models");
+const { generateFourWeekRanges } = require("../util/modifiers");
 const { raw } = require("body-parser");
 const { where } = require("sequelize");
 require("dotenv").config();
@@ -16,77 +17,152 @@ require("dotenv").config();
 
 class TaskStatusInfoService {
   // 🔹 Create Ticket Status Info
-  static async createTicketStatusInfo(data) {
+  static async createTimeSheetStatusInfo(params, data) {
+    const { taskType } = params;
     const {
-      task_title,
-      task_type,
-      module,
+      requested_by,
+      description,
       ticket_id,
       status,
-      percentage_complete,
-      execution_note,
-      created_by,
-      application_id,
-      ticketing_system_id,
+      color_row,
+      reported_by,
+      statement_of_the_issue,
+      sr_no,
     } = data;
-
-    // Validate and create the ticket status info
-    if (
-      !data.task_title ||
-      !data.task_type ||
-      !data.status ||
-      !data.ticket_id ||
-      !data.module ||
-      !data.ticketing_system_id ||
-      !data.application_id ||
-      !data.execution_note
-    ) {
-      return { message: "Invalid data provided", status: 400 };
-    }
-
-    const allTicketingSystem = await TicketingSystem.findAll({ raw: true });
-    const ApplicationSystem = await Application.findAll({ raw: true });
-
-    if (
-      allTicketingSystem &&
-      allTicketingSystem.length > 0 &&
-      ApplicationSystem &&
-      ApplicationSystem.length > 0
-    ) {
-      let mappedApplciationId = ApplicationSystem.map((item) => item.id);
-      let mappedTicketingSystem = allTicketingSystem.map((item) => item.id);
+    try {
+      console.log("hold on ___", taskType);
+      // Validate and create the ticket status info
 
       if (
-        mappedTicketingSystem.includes(ticketing_system_id) &&
-        mappedApplciationId.includes(application_id)
+        taskType &&
+        taskType.toLowerCase() == "assignment"
+        // requested_by &&
+        // description &&
+        // ticket_id &&
+        // status &&
+        // color_row
       ) {
         console.log("you can enter the value");
+
+        if (
+          !data.requested_by ||
+          !data.description ||
+          !data.status ||
+          !data.ticket_id ||
+          !data.color_row
+        ) {
+          return { message: "Invalid data provided", status: 400 };
+        }
         const taskStatusInfo = await TaskStatusInfo.create({
-          task_title: task_title ? task_title : "",
-          task_type: task_type ? task_type : "",
-          module: module ? module : "",
-          application_id: application_id ? application_id : "",
-          ticketing_system_id: ticketing_system_id ? ticketing_system_id : "",
+          requestedBy: requested_by ? requested_by : "",
+          task_type: taskType ? taskType : "",
           ticket_id: ticket_id ? ticket_id : "",
+          description: description ? description : "",
           status: status ? status : "",
-          execution_note: execution_note ? execution_note : "",
+          color_row: color_row ? color_row : "",
+          reportedBy: "",
+          statement_of_the_issue: "",
           // created_by: created_by ? created_by : ''
         });
         return {
-          message: "Ticket Status Info created successfully",
+          message: "Assignment timesheet created successfully",
+          status: 200,
+        };
+      } else if (
+        taskType &&
+        taskType.toLowerCase() == "issue"
+        // reported_by &&
+        // statement_of_the_issue &&
+        // sr_no &&
+        // status &&
+        // ticket_id &&
+        // color_row
+      ) {
+        console.log("status undefined");
+        if (
+          !data.reported_by ||
+          !data.statement_of_the_issue ||
+          !data.status ||
+          !data.ticket_id ||
+          !data.color_row
+        ) {
+          return { message: "Invalid data provided", status: 400 };
+        }
+
+        const taskStatusInfo = await TaskStatusInfo.create({
+          reportedBy: reported_by ? reported_by : "",
+          task_type: taskType ? taskType : "",
+          ticket_id: ticket_id ? ticket_id : "",
+          statement_of_the_issue: statement_of_the_issue
+            ? statement_of_the_issue
+            : "",
+          status: status ? status : "",
+          color_row: color_row ? color_row : "",
+          sr_no: sr_no ? sr_no : "",
+          requestedBy: "",
+          description: "",
+          // created_by: created_by ? created_by : ''
+        });
+        return {
+          message: "Issue timesheet created successfully",
+          status: 200,
+        };
+      } else if (taskType && taskType.toLowerCase() == "change_request") {
+        if (
+          !data.requested_by ||
+          !data.description ||
+          !data.status ||
+          !data.ticket_id ||
+          !data.color_row
+        ) {
+          return { message: "Invalid data provided", status: 400 };
+        }
+        const taskStatusInfo = await TaskStatusInfo.create({
+          requestedBy: requested_by ? requested_by : "",
+          task_type: taskType ? taskType : "",
+          ticket_id: ticket_id ? ticket_id : "",
+          description: description ? description : "",
+          status: status ? status : "",
+          color_row: color_row ? color_row : "",
+          reportedBy: "",
+          statement_of_the_issue: "",
+          // created_by: created_by ? created_by : ''
+        });
+        return {
+          message: "Change Request timesheet created successfully",
+          status: 200,
+        };
+      }
+    } catch (error) {
+      return {
+        message: error.message,
+        status: 200,
+      };
+    }
+  }
+
+  static async createViewDatesDropdown(date) {
+    let { currentDate } = date;
+    currentDate = currentDate.toString();
+    if (currentDate) {
+      const dateGeneration = await generateFourWeekRanges(
+        currentDate.toString()
+      );
+      if (
+        dateGeneration &&
+        dateGeneration.length > 0 &&
+        Array.isArray(dateGeneration)
+      ) {
+        return {
+          message: "Date generated Successfully !",
+          content: dateGeneration,
           status: 200,
         };
       } else {
-        return {
-          message: "Please enter correct Application or Ticketing System Id",
-          status: 403,
-        };
+        return [];
       }
     } else {
-      return {
-        message: "Please provide Application or Ticketing System Id to proceed",
-        status: 403,
-      };
+      return { message: "current date needed !", status: 403 };
     }
   }
 
@@ -95,47 +171,64 @@ class TaskStatusInfoService {
 
   // 🔹 Get Ticket Status Info
 
-  static async getTicketStatusInfo(data = {}) {
+  static async getTimeSheetById(data) {
+    const { taskId } = data;
     try {
-      const page = parseInt(data.page, 10) || 1;
-      const pageSize = parseInt(data.pagesize, 10) || 10;
-      let result;
-
-      if (data.page && data.pagesize) {
-        result = await TaskStatusInfo.findAndCountAll({
+      // data.
+      if (taskId) {
+        const findSpecificTask = await TaskStatusInfo.findOne({
+          where: { id: taskId ? taskId.toString() : "" },
           raw: true,
-          offset: (page - 1) * pageSize,
-          limit: pageSize,
-          order: [["id", "ASC"]],
         });
+        if (
+          findSpecificTask &&
+          findSpecificTask instanceof Object &&
+          Object.keys(findSpecificTask).length > 0
+        ) {
+          return {
+            message: "Task Id fetched Successfully",
+            content: findSpecificTask,
+            status: 200,
+          };
+        } else {
+          return {
+            message: "Task Id is not present",
+            status: 403,
+          };
+        }
+        // console.log("Unique Task", findSpecificTask);
       } else {
-        result = await TaskStatusInfo.findAndCountAll({
-          raw: true,
-          order: [["id", "ASC"]],
-        });
+        return {
+          message: "Please Provide a valid Task Id",
+          status: 403,
+        };
       }
+    } catch (error) {
+      console.error("Error fetching Ticket Status Info:", error);
+      return { message: "Internal Server Error", status: 500 };
+    }
+  }
 
-      console.log("view_____", result.rows);
-
-      if (!result.rows || !result.rows.length) {
-        return { message: "Ticket Status Info not found", status: 403 };
-      }
-
-      // Calculate pagination details
-      const totalRecords = result.count;
-      const totalPages = Math.ceil(totalRecords / pageSize);
-
-      const nextPage = page < totalPages ? page + 1 : null;
-      const previousPage = page > 1 ? page - 1 : null;
-
+  static async getLegendsColorsandId() {
+    try {
+      const fetchCurrentColors = await TaskStatusInfo.findAll({
+        where: {
+          status: ["In Progress", "New", "Reported"],
+        },
+        raw: true,
+      });
+      let onlyColors =
+        fetchCurrentColors &&
+        fetchCurrentColors.map((item) => ({
+          code: item.color_row,
+          task_id: item.task_code,
+          id: item.id,
+        }));
+      console.log("legends___", onlyColors);
       return {
         status: 200,
-        totalRecords,
-        totalPages,
-        currentPage: page,
-        nextPage,
-        previousPage,
-        rows: result.rows,
+        message: "Legends fetched Successfully",
+        content: onlyColors && onlyColors.length > 0 ? onlyColors : [],
       };
     } catch (error) {
       console.error("Error fetching Ticket Status Info:", error);
@@ -143,85 +236,117 @@ class TaskStatusInfoService {
     }
   }
 
-  // static async getTicketStatusInfo(data = {}) {
-  //   try {
-  //     const page = parseInt(data.page, 10) || 1;
-  //     const pageSize = parseInt(data.pagesize, 10) || 10;
-  //     const nextPage = data.page < totalPages ? page + 1 : null;
-  //     const previousPage = page > 1 ? page - 1 : null;
-  //     let result ;
-  //     if(data.page && data.pagesize){
-  //       result  = await TaskStatusInfo.findAndCountAll({
-  //       raw: true,
-  //       offset: (page - 1) * pageSize,
-  //       limit: pageSize,
-  //       order: [['id', 'ASC']], // optional for consistent results
-  //     });
-  //     }else{
-  //          result = await TaskStatusInfo.findAndCountAll({
-  //           raw: true,
-  //           order: [['id', 'ASC']], // optional for consistent results
-  //         });
-  //     }
-  //     console.log('view_____',result.rows)
-
-  //     if (!result.rows.length) {
-  //       return { message: "Ticket Status Info not found", status: 403 };
-  //     }
-
-  //     return {
-  //       status: 200,
-  //       totalRecords: result.count,
-  //       totalPages: Math.ceil(result.count / pageSize),
-  //       currentPage: page,
-  //       rows: result.rows,
-  //     };
-  //   } catch (error) {
-  //     console.error("Error fetching Ticket Status Info:", error);
-  //     return { message: "Internal Server Error", status: 500 };
-  //   }
-  // }
-
-  static async editTicketStatusInfo(data, body) {
+  static async editTaskSheetInfo(params, data) {
     try {
-      if (data.ticketId) {
+      const { taskId } = params;
+      if (taskId) {
         const taskStatusEdit = await TaskStatusInfo.findOne({
-          where: { id: data.ticketId },
+          where: { id: taskId },
           raw: true,
         });
         if (taskStatusEdit === null) {
-          return { message: "Ticket Status cannot be Updated!", status: 403 };
-        }
-        if (!body.execution_note || !body.status || !body.task_type) {
-          return { message: "Inappropriate Data in the Body", status: 403 };
+          return { message: "Task Sheet cannot be Updated!", status: 403 };
         }
         if (
-          Object.keys(body).every(
-            (item) =>
-              item == "task_type" ||
-              item == "status" ||
-              item == "execution_note"
-          )
+          taskStatusEdit &&
+          taskStatusEdit.task_type.toLowerCase() == "assignment"
         ) {
-          await TaskStatusInfo.update(
-            {
-              execution_note: body.execution_note,
-              status: body.status,
-              task_type: body.task_type,
-            },
-            {
-              where: {
-                id: data.ticketId,
+          if (!data.requested_by || !data.description || !data.status) {
+            return { message: "Inappropriate Data in the Body", status: 403 };
+          }
+          console.log("assignment____", data);
+          if (
+            Object.keys(data).every(
+              (item) =>
+                item == "requested_by" ||
+                item == "description" ||
+                item == "status"
+            )
+          ) {
+            await TaskStatusInfo.update(
+              {
+                requestedBy: data.requested_by,
+                status: data.status,
+                description: data.description,
               },
-            }
-          );
-        } else {
-          return { message: "Other Attributes not allowed", status: 403 };
+              {
+                where: {
+                  id: taskId,
+                },
+              }
+            );
+          } else {
+            return { message: "Other Attributes not allowed", status: 403 };
+          }
+        } else if (
+          taskStatusEdit &&
+          taskStatusEdit.task_type.toLowerCase() == "issue"
+        ) {
+          if (
+            !data.reported_by ||
+            !data.statement_of_the_issue ||
+            !data.status
+          ) {
+            return { message: "Inappropriate Data in the Body", status: 403 };
+          }
+          if (
+            Object.keys(data).every(
+              (item) =>
+                item == "reported_by" ||
+                item == "statement_of_the_issue" ||
+                item == "status"
+            )
+          ) {
+            await TaskStatusInfo.update(
+              {
+                reportedBy: data.reported_by,
+                status: data.status,
+                statement_of_the_issue: data.statement_of_the_issue,
+              },
+              {
+                where: {
+                  id: taskId,
+                },
+              }
+            );
+          } else {
+            return { message: "Other Attributes not allowed", status: 403 };
+          }
+        } else if (
+          taskStatusEdit &&
+          taskStatusEdit.task_type.toLowerCase() == "change_request"
+        ) {
+          if (!data.requested_by || !data.description || !data.status) {
+            return { message: "Inappropriate Data in the Body", status: 403 };
+          }
+          console.log("assignment____", data);
+          if (
+            Object.keys(data).every(
+              (item) =>
+                item == "requested_by" ||
+                item == "description" ||
+                item == "status"
+            )
+          ) {
+            await TaskStatusInfo.update(
+              {
+                requestedBy: data.requested_by,
+                status: data.status,
+                description: data.description,
+              },
+              {
+                where: {
+                  id: taskId,
+                },
+              }
+            );
+          } else {
+            return { message: "Other Attributes not allowed", status: 403 };
+          }
         }
-        console.log("edited Ticekt Status Info___", taskStatusEdit, body);
         return { message: "Task Status Info Edited Successfully", status: 201 };
       } else {
-        return { message: "Ticket Id not found", status: 403 };
+        return { message: "Task Id not found", status: 403 };
       }
     } catch (error) {
       console.error("Error fetching Ticket Status Info:", error);
