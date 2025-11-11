@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const {
   TaskStatusInfo,
+  Colors,
   Role,
   EmployeeRole,
   Application,
@@ -142,16 +143,18 @@ class TaskStatusInfoService {
   }
 
   static async createViewDatesDropdown(date) {
-    let { currentDate } = date;
+    let { currentDate, page } = date;
     currentDate = currentDate.toString();
     if (currentDate) {
       const dateGeneration = await generateFourWeekRanges(
-        currentDate.toString()
+        currentDate.toString(),
+        page
       );
       if (
         dateGeneration &&
         dateGeneration.length > 0 &&
-        Array.isArray(dateGeneration)
+        Array.isArray(dateGeneration) &&
+        Number(page)
       ) {
         return {
           message: "Date generated Successfully !",
@@ -171,8 +174,8 @@ class TaskStatusInfoService {
 
   // 🔹 Get Ticket Status Info
 
-  static async getTimeSheetById(data) {
-    const { taskId } = data;
+  static async getTimeSheetById(params) {
+    const { taskId } = params;
     try {
       // data.
       if (taskId) {
@@ -235,6 +238,36 @@ class TaskStatusInfoService {
       return { message: "Internal Server Error", status: 500 };
     }
   }
+  //
+
+  // static async fetchColorsTaskForm() {
+  //   try {
+  //     const fetchCurrentColors = await Colors.findAll({
+  //       where: {
+  //         status: {
+  //           [Op.notIn]: "Completed",
+  //         },
+  //       },
+  //       raw: true,
+  //     });
+  //     // let onlyColors =
+  //     //   fetchCurrentColors &&
+  //     //   fetchCurrentColors.map((item) => ({
+  //     //     code: item.color_row,
+  //     //     task_id: item.task_code,
+  //     //     id: item.id,
+  //     //   }));
+  //     console.log("legends___", onlyColors);
+  //     return {
+  //       status: 200,
+  //       message: "Legends fetched Successfully",
+  //       content: onlyColors && onlyColors.length > 0 ? onlyColors : [],
+  //     };
+  //   } catch (error) {
+  //     console.error("Error fetching Ticket Status Info:", error);
+  //     return { message: "Internal Server Error", status: 500 };
+  //   }
+  // }
 
   static async editTaskSheetInfo(params, data) {
     try {

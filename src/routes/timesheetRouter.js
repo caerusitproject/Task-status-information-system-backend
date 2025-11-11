@@ -3,7 +3,7 @@ const router = express.Router();
 // const { authenticate, authorizeRoles } = require("../middleware/authEmpMiddleware");
 const TaskStatusInfo = require("../services/taskStatusInfoService");
 
-router.get("/dates/:currentDate", async (req, res, next) => {
+router.get("/dates/:currentDate/:page", async (req, res, next) => {
   try {
     const newStatusInfo = await TaskStatusInfo.createViewDatesDropdown(
       req.params
@@ -33,9 +33,9 @@ router.post("/create/:taskType", async (req, res, next) => {
   }
 });
 
-router.get("/viewbyId", async (req, res, next) => {
+router.get("/viewbyId/:taskId", async (req, res, next) => {
   try {
-    const newStatusInfo = await TaskStatusInfo.getTimeSheetById(req.body);
+    const newStatusInfo = await TaskStatusInfo.getTimeSheetById(req.params);
     res.status(newStatusInfo.status).json({
       message: newStatusInfo.message,
       content: newStatusInfo.content,
@@ -73,5 +73,18 @@ router.get("/legends-colors", async (req, res, next) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+// router.get("/color-pallette", async (req, res, next) => {
+//   try {
+//     const newStatusInfo = await TaskStatusInfo.fetchColorsTaskForm();
+//     res.status(newStatusInfo.status).json({
+//       message: newStatusInfo.message,
+//       content: newStatusInfo.content,
+//       status: newStatusInfo.status,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// });
 
 module.exports = router;
