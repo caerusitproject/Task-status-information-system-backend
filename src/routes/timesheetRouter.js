@@ -74,17 +74,17 @@ router.get("/legends-colors", async (req, res, next) => {
   }
 });
 
-// router.get("/color-pallette", async (req, res, next) => {
-//   try {
-//     const newStatusInfo = await TaskStatusInfo.fetchColorsTaskForm();
-//     res.status(newStatusInfo.status).json({
-//       message: newStatusInfo.message,
-//       content: newStatusInfo.content,
-//       status: newStatusInfo.status,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
+router.get("/color-pallette", async (req, res, next) => {
+  try {
+    const newStatusInfo = await TaskStatusInfo.getAvailableColors();
+    res.status(newStatusInfo.status).json({
+      message: newStatusInfo.message,
+      content: newStatusInfo.content,
+      status: newStatusInfo.status,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;

@@ -20,6 +20,15 @@ const TaskStatusInfo = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    color_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      unique: true, // 👈 this guarantees one task per color
+      references: {
+        model: "colors",
+        key: "id",
+      },
+    },
     requestedBy: {
       type: DataTypes.STRING,
       allowNull: false,

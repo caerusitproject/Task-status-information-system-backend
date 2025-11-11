@@ -10,7 +10,7 @@ const {
 } = require("../models");
 const { generateFourWeekRanges } = require("../util/modifiers");
 const { raw } = require("body-parser");
-const { where } = require("sequelize");
+const { where, Op } = require("sequelize");
 require("dotenv").config();
 
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -54,6 +54,7 @@ class TaskStatusInfoService {
         ) {
           return { message: "Invalid data provided", status: 400 };
         }
+        const color = await Colors.findOne({ where: { code: color_row } });
         const taskStatusInfo = await TaskStatusInfo.create({
           requestedBy: requested_by ? requested_by : "",
           task_type: taskType ? taskType : "",
@@ -61,6 +62,7 @@ class TaskStatusInfoService {
           description: description ? description : "",
           status: status ? status : "",
           color_row: color_row ? color_row : "",
+          color_id: color.id,
           reportedBy: "",
           statement_of_the_issue: "",
           // created_by: created_by ? created_by : ''
@@ -89,7 +91,7 @@ class TaskStatusInfoService {
         ) {
           return { message: "Invalid data provided", status: 400 };
         }
-
+        const color = await Colors.findOne({ where: { code: color_row } });
         const taskStatusInfo = await TaskStatusInfo.create({
           reportedBy: reported_by ? reported_by : "",
           task_type: taskType ? taskType : "",
@@ -100,6 +102,7 @@ class TaskStatusInfoService {
           status: status ? status : "",
           color_row: color_row ? color_row : "",
           sr_no: sr_no ? sr_no : "",
+          color_id: color.id,
           requestedBy: "",
           description: "",
           // created_by: created_by ? created_by : ''
@@ -118,6 +121,7 @@ class TaskStatusInfoService {
         ) {
           return { message: "Invalid data provided", status: 400 };
         }
+        const color = await Colors.findOne({ where: { code: color_row } });
         const taskStatusInfo = await TaskStatusInfo.create({
           requestedBy: requested_by ? requested_by : "",
           task_type: taskType ? taskType : "",
@@ -125,6 +129,7 @@ class TaskStatusInfoService {
           description: description ? description : "",
           status: status ? status : "",
           color_row: color_row ? color_row : "",
+          color_id: color.id,
           reportedBy: "",
           statement_of_the_issue: "",
           // created_by: created_by ? created_by : ''
@@ -218,17 +223,16 @@ class TaskStatusInfoService {
         where: {
           status: ["In Progress", "New", "Reported"],
         },
-        attributes: ["color_row", "task_code", "id"],
+        attributes: [
+          "color_row",
+          "color",
+          "sr_no",
+          "ticket_id",
+          "task_code",
+          "id",
+        ],
         raw: true,
       });
-      // let onlyColors =
-      //   fetchCurrentColors &&
-      //   fetchCurrentColors.map((item) => ({
-      //     code: item.color_row,
-      //     task_id: item.task_code,
-      //     id: item.id,
-      //   }));
-      // console.log("legends___", onlyColors);
       return {
         status: 200,
         message: "Legends fetched Successfully",
@@ -244,34 +248,40 @@ class TaskStatusInfoService {
   }
   //
 
-  // static async fetchColorsTaskForm() {
-  //   try {
-  //     const fetchCurrentColors = await Colors.findAll({
-  //       where: {
-  //         status: {
-  //           [Op.notIn]: "Completed",
-  //         },
-  //       },
-  //       raw: true,
-  //     });
-  //     // let onlyColors =
-  //     //   fetchCurrentColors &&
-  //     //   fetchCurrentColors.map((item) => ({
-  //     //     code: item.color_row,
-  //     //     task_id: item.task_code,
-  //     //     id: item.id,
-  //     //   }));
-  //     console.log("legends___", onlyColors);
-  //     return {
-  //       status: 200,
-  //       message: "Legends fetched Successfully",
-  //       content: onlyColors && onlyColors.length > 0 ? onlyColors : [],
-  //     };
-  //   } catch (error) {
-  //     console.error("Error fetching Ticket Status Info:", error);
-  //     return { message: "Internal Server Error", status: 500 };
-  //   }
-  // }
+  static async getAvailableColors(req, res) {
+    try {
+      const usedColors = await TaskStatusInfo.findAll({
+        where: {
+          status: { [Op.ne]: "Completed" }, // colors currently locked
+        },
+        attributes: ["color_id", "id"],
+        raw: true,
+      });
+      let dumpArr = [];
+      const usedColorIds = usedColors.map((item) => {
+        if (item.color_id != null) {
+          dumpArr.push(item.color_id);
+        }
+      });
+      console.log("colors___", usedColorIds);
+
+      const availableColors = await Colors.findAll({
+        where: {
+          id: { [Op.notIn]: dumpArr },
+        },
+        attributes: ["id", "code"],
+        raw: true,
+      });
+
+      return {
+        message: "Data Successfull",
+        content: availableColors,
+        status: 200,
+      };
+    } catch (error) {
+      return { message: error.message, status: 500 };
+    }
+  }
 
   static async editTaskSheetInfo(params, data) {
     try {

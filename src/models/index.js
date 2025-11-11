@@ -86,6 +86,17 @@ dbInfo.TaskDetail.belongsTo(dbInfo.TaskStatusInfo, {
   as: "taskstatusinfo",
 });
 
+// Task Status Info ↔ COLORS
+dbInfo.Colors.hasMany(dbInfo.TaskStatusInfo, {
+  foreignKey: "color_id",
+  as: "task",
+});
+
+dbInfo.TaskStatusInfo.belongsTo(dbInfo.Colors, {
+  foreignKey: "color_id",
+  as: "color",
+});
+
 // ✅ Attach Sequelize references at the end
 
 // 🧩 Debug: Confirm all associations and model count

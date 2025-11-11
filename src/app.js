@@ -14,6 +14,7 @@ const authController = require("./controllers/authController");
 const taskController = require("./controllers/taskController");
 const adminController = require("./controllers/adminController");
 const reportController = require("./controllers/reportController");
+const seedColorsOnce = require("./controllers/seedcolorController");
 
 const app = express();
 app.use(cors());
@@ -42,7 +43,7 @@ async function start() {
 
     // Sync DB models (dev only). In production use migrations.
     await sequelize.sync({ alter: true });
-
+    await seedColorsOnce();
     console.log("Database synchronized");
 
     app.listen(PORT, () => {
