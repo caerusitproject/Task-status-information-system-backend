@@ -180,7 +180,7 @@ class TaskStatusInfoService {
       // data.
       if (taskId) {
         const findSpecificTask = await TaskStatusInfo.findOne({
-          where: { id: taskId ? taskId.toString() : "" },
+          where: { task_code: taskId ? taskId.toString() : "" },
           raw: true,
         });
         if (
