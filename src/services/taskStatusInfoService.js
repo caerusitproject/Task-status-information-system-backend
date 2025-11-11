@@ -223,14 +223,7 @@ class TaskStatusInfoService {
         where: {
           status: ["In Progress", "New", "Reported"],
         },
-        attributes: [
-          "color_row",
-          "color",
-          "sr_no",
-          "ticket_id",
-          "task_code",
-          "id",
-        ],
+        attributes: ["color_row", "sr_no", "ticket_id", "task_code", "id"],
         raw: true,
       });
       return {
