@@ -218,20 +218,24 @@ class TaskStatusInfoService {
         where: {
           status: ["In Progress", "New", "Reported"],
         },
+        attributes: ["color_row", "task_code", "id"],
         raw: true,
       });
-      let onlyColors =
-        fetchCurrentColors &&
-        fetchCurrentColors.map((item) => ({
-          code: item.color_row,
-          task_id: item.task_code,
-          id: item.id,
-        }));
-      console.log("legends___", onlyColors);
+      // let onlyColors =
+      //   fetchCurrentColors &&
+      //   fetchCurrentColors.map((item) => ({
+      //     code: item.color_row,
+      //     task_id: item.task_code,
+      //     id: item.id,
+      //   }));
+      // console.log("legends___", onlyColors);
       return {
         status: 200,
         message: "Legends fetched Successfully",
-        content: onlyColors && onlyColors.length > 0 ? onlyColors : [],
+        content:
+          fetchCurrentColors && fetchCurrentColors.length > 0
+            ? fetchCurrentColors
+            : [],
       };
     } catch (error) {
       console.error("Error fetching Ticket Status Info:", error);
@@ -274,7 +278,7 @@ class TaskStatusInfoService {
       const { taskId } = params;
       if (taskId) {
         const taskStatusEdit = await TaskStatusInfo.findOne({
-          where: { id: taskId },
+          where: { task_code: taskId.toString() },
           raw: true,
         });
         if (taskStatusEdit === null) {
@@ -284,7 +288,13 @@ class TaskStatusInfoService {
           taskStatusEdit &&
           taskStatusEdit.task_type.toLowerCase() == "assignment"
         ) {
-          if (!data.requested_by || !data.description || !data.status) {
+          if (
+            !data.requested_by ||
+            !data.description ||
+            !data.status ||
+            !data.ticket_id ||
+            !data.color_row
+          ) {
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
           console.log("assignment____", data);
@@ -293,7 +303,9 @@ class TaskStatusInfoService {
               (item) =>
                 item == "requested_by" ||
                 item == "description" ||
-                item == "status"
+                item == "status" ||
+                item == "ticket_id" ||
+                item == "color_row"
             )
           ) {
             await TaskStatusInfo.update(
@@ -301,10 +313,11 @@ class TaskStatusInfoService {
                 requestedBy: data.requested_by,
                 status: data.status,
                 description: data.description,
+                ticket_id: data.ticket_id,
               },
               {
                 where: {
-                  id: taskId,
+                  task_code: taskId.toString(),
                 },
               }
             );
@@ -318,7 +331,9 @@ class TaskStatusInfoService {
           if (
             !data.reported_by ||
             !data.statement_of_the_issue ||
-            !data.status
+            !data.status ||
+            !data.ticket_id ||
+            !data.color_row
           ) {
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
@@ -327,7 +342,10 @@ class TaskStatusInfoService {
               (item) =>
                 item == "reported_by" ||
                 item == "statement_of_the_issue" ||
-                item == "status"
+                item == "status" ||
+                item == "ticket_id" ||
+                item == "color_row" ||
+                item == "sr_no"
             )
           ) {
             await TaskStatusInfo.update(
@@ -335,10 +353,12 @@ class TaskStatusInfoService {
                 reportedBy: data.reported_by,
                 status: data.status,
                 statement_of_the_issue: data.statement_of_the_issue,
+                ticket_id: data.ticket_id,
+                sr_no: data.sr_no,
               },
               {
                 where: {
-                  id: taskId,
+                  task_code: taskId.toString(),
                 },
               }
             );
@@ -349,7 +369,13 @@ class TaskStatusInfoService {
           taskStatusEdit &&
           taskStatusEdit.task_type.toLowerCase() == "change_request"
         ) {
-          if (!data.requested_by || !data.description || !data.status) {
+          if (
+            !data.requested_by ||
+            !data.description ||
+            !data.status ||
+            !data.ticket_id ||
+            !data.color_row
+          ) {
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
           console.log("assignment____", data);
@@ -358,7 +384,9 @@ class TaskStatusInfoService {
               (item) =>
                 item == "requested_by" ||
                 item == "description" ||
-                item == "status"
+                item == "status" ||
+                item == "ticket_id" ||
+                item == "color_row"
             )
           ) {
             await TaskStatusInfo.update(
@@ -366,10 +394,11 @@ class TaskStatusInfoService {
                 requestedBy: data.requested_by,
                 status: data.status,
                 description: data.description,
+                ticket_id: data.ticket_id,
               },
               {
                 where: {
-                  id: taskId,
+                  task_code: taskId.toString(),
                 },
               }
             );
