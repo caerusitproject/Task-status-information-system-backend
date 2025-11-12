@@ -106,7 +106,6 @@ const TaskStatusInfo = sequelize.define(
 // ✅ Hook to generate `task_code` based on `task_type` & auto-incremented `id`
 TaskStatusInfo.addHook("afterCreate", async (task) => {
   let prefix;
-
   switch (task.task_type) {
     case "assignment":
       prefix = "AS";
@@ -126,6 +125,34 @@ TaskStatusInfo.addHook("afterCreate", async (task) => {
   const newCode = `${prefix}-${formattedId}`;
 
   await task.update({ task_code: newCode });
+});
+
+TaskStatusInfo.addHook("afterSync", async () => {
+  try {
+    const existing = await TaskStatusInfo.findOne({
+      where: { ticket_id: "DEFAULT-TICKET" },
+    });
+
+    if (!existing) {
+      await TaskStatusInfo.create({
+        ticket_id: "DEFAULT-TICKET",
+        requestedBy: "system",
+        reportedBy: "system",
+        task_type: "ticket_less",
+        description: "Default entry for ticket_less task type.",
+        statement_of_the_issue: "N/A",
+        status: "New",
+        color_row: "#ffffff56",
+      });
+      console.log("✅ Default 'ticket_less' entry created.");
+    } else {
+      console.log(
+        "ℹ️ Default 'ticket_less' entry already exists. Skipping insert."
+      );
+    }
+  } catch (error) {
+    console.error("❌ Error inserting default entry:", error);
+  }
 });
 
 module.exports = TaskStatusInfo;

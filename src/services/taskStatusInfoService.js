@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const {
   TaskStatusInfo,
   Colors,
+  TaskDetail,
   Role,
   EmployeeRole,
   Application,
@@ -158,8 +159,7 @@ class TaskStatusInfoService {
       if (
         dateGeneration &&
         dateGeneration.length > 0 &&
-        Array.isArray(dateGeneration) &&
-        Number(page)
+        Array.isArray(dateGeneration)
       ) {
         return {
           message: "Date generated Successfully !",
@@ -221,9 +221,18 @@ class TaskStatusInfoService {
     try {
       const fetchCurrentColors = await TaskStatusInfo.findAll({
         where: {
-          status: ["In Progress", "New", "Reported"],
+          status: ["In Progress", "New", "Reported", "Resolved", "On Hold"],
         },
-        attributes: ["color_row", "sr_no", "ticket_id", "task_code", "id"],
+        attributes: [
+          "color_row",
+          "sr_no",
+          "task_type",
+          "status",
+          "ticket_id",
+          "task_code",
+          "id",
+        ],
+        order: [["created_at", "DESC"]],
         raw: true,
       });
       return {
@@ -418,6 +427,68 @@ class TaskStatusInfoService {
       return { message: "Internal Server Error", status: 500 };
     }
   }
+
+  // static createTaskDetailEntry = async (taskId, payload) => {
+  //   try {
+  //     const task = await TaskStatusInfo.findOne({
+  //       where: { task_code: taskId.toString() },
+  //     });
+  //     if (!task) throw new Error("Task Id not found");
+
+  //     const detailData = {
+  //       tstatusId: task.id,
+  //       taskId: taskId,
+  //       task_type: task.task_type,
+  //     };
+
+  //     switch (task.task_type) {
+  //       case "assignment":
+  //         if (!payload.daily_accomplishment)
+  //           return {
+  //             message: "daily_accomplishment is required!",
+  //             status: 403,
+  //           };
+  //         detailData.daily_accomplishment = payload.daily_accomplishment;
+  //         break;
+
+  //       case "issue":
+  //         if (!payload.rca_investigation && !payload.resolution_and_steps)
+  //           return {
+  //             message:
+  //               "rca_investigation and resolution_and_steps is required!",
+  //             status: 403,
+  //           };
+  //         detailData.rca_investigation = payload.rca_investigation;
+  //         if (payload.resolution_and_steps)
+  //           detailData.resolution_and_steps = payload.resolution_and_steps;
+  //         break;
+
+  //       case "change_request":
+  //         if (!payload.resolution_and_steps)
+  //           return {
+  //             message: "daily_accomplishment is required!",
+  //             status: 403,
+  //           };
+  //         detailData.resolution_and_steps = payload.resolution_and_steps;
+  //         break;
+
+  //       default:
+  //         return {
+  //           message: `Unsupported task type: ${task.task_type}`,
+  //           status: 403,
+  //         };
+  //     }
+
+  //     // 3️⃣ Create the detail entry
+  //     const newDetail = await TaskDetail.create(detailData);
+  //     return {
+  //       message: "Task Detail Entry Created Successfully!",
+  //       status: 201,
+  //     };
+  //   } catch (error) {
+  //     return { message: error.message, status: error.status };
+  //   }
+  // };
 
   // 🔹 Login Employee
   //   static async loginEmployee(email, password) {
