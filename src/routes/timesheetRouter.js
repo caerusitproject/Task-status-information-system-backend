@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const TaskController = require("../controllers/taskController");
 // const { authenticate, authorizeRoles } = require("../middleware/authEmpMiddleware");
 const TaskStatusInfo = require("../services/taskStatusInfoService");
 
@@ -86,5 +87,14 @@ router.get("/color-pallette", async (req, res, next) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+router.post("/create-task-details/:taskId", TaskController.createTaskDetail);
+
+router.get("/weekly-summary-view", TaskController.getWeeklySummary);
+
+// router.post(
+//   "/create-time-task/:taskId",
+//   TaskController.createTaskDetailStatusTime
+// );
 
 module.exports = router;

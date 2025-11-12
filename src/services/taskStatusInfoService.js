@@ -221,7 +221,8 @@ class TaskStatusInfoService {
     try {
       const fetchCurrentColors = await TaskStatusInfo.findAll({
         where: {
-          status: ["In Progress", "New", "Reported", "Resolved", "On Hold"],
+          status: { [Op.ne]: "Completed" },
+          // status: ["In Progress", "New", "Reported", "Resolved", "On Hold"],
         },
         attributes: [
           "color_row",
@@ -232,7 +233,7 @@ class TaskStatusInfoService {
           "task_code",
           "id",
         ],
-        order: [["created_at", "DESC"]],
+        order: [["created_at", "ASC"]],
         raw: true,
       });
       return {
@@ -428,142 +429,283 @@ class TaskStatusInfoService {
     }
   }
 
-  // static createTaskDetailEntry = async (taskId, payload) => {
-  //   try {
-  //     const task = await TaskStatusInfo.findOne({
-  //       where: { task_code: taskId.toString() },
+  static createTaskDetailEntry = async (taskId, payload) => {
+    try {
+      const task = await TaskStatusInfo.findOne({
+        where: { task_code: taskId.toString() },
+      });
+      if (!task) throw new Error("Task Id not found");
+
+      const detailData = {
+        tstatusId: task.id,
+        taskId: taskId,
+        task_type: task.task_type,
+        hour: payload.hour,
+        minute: payload.minute,
+      };
+
+      switch (task.task_type) {
+        case "assignment":
+          if (!payload.status || !payload.daily_accomplishment)
+            return {
+              message: "status is required!",
+              status: 403,
+            };
+          if (payload.daily_accomplishment) {
+            detailData.daily_accomplishment = payload.daily_accomplishment;
+            detailData.hour = payload.hour;
+            detailData.minute = payload.minute;
+            // detailData.status = payload.status;
+          }
+          break;
+
+        case "issue":
+          if (
+            !payload.status ||
+            !payload.rca_investigation ||
+            !payload.resolution_and_steps
+          )
+            return {
+              message: "status is required!",
+              status: 403,
+            };
+          if (payload.resolution_and_steps || payload.rca_investigation)
+            detailData.rca_investigation = payload.rca_investigation;
+          detailData.resolution_and_steps = payload.resolution_and_steps;
+          detailData.hour = payload.hour;
+          detailData.minute = payload.minute;
+          // detailData.status = payload.status;
+          break;
+
+        case "change_request":
+          if (!payload.status)
+            return {
+              message: "status is required!",
+              status: 403,
+            };
+          detailData.daily_accomplishment = payload.daily_accomplishment;
+          detailData.hour = payload.hour;
+          detailData.minute = payload.minute;
+          // detailData.status = payload.status;
+          break;
+
+        case "ticket_less":
+          if (!payload.status)
+            return {
+              message: "status is required!",
+              status: 403,
+            };
+          detailData.daily_accomplishment = payload.daily_accomplishment;
+          detailData.hour = payload.hour;
+          detailData.minute = payload.minute;
+          // detailData.status = payload.status;
+          break;
+
+        default:
+          return {
+            message: `Unsupported task type: ${task.task_type}`,
+            status: 403,
+          };
+      }
+
+      // 3️⃣ Create the detail entry
+      let updateStatus = await TaskStatusInfo.update(
+        {
+          status: payload.status,
+        },
+        {
+          where: {
+            task_code: taskId,
+          },
+        }
+      );
+      const newDetail = await TaskDetail.create(detailData);
+      return {
+        message: "Task Detail Entry Created Successfully!",
+        status: 201,
+      };
+    } catch (error) {
+      return { message: error.message, status: error.status };
+    }
+  };
+
+  static createEachTimeTaskDetailEntry = async (taskId, payload) => {
+    try {
+      const task = await TaskStatusInfo.findOne({
+        where: { task_code: taskId.toString() },
+      });
+      if (!task) throw new Error("Task Id not found");
+
+      const detailData = {
+        tstatusId: task.id,
+        taskId: taskId,
+        task_type: task.task_type,
+        hour: payload.hour,
+        minute: payload.minute,
+        status: payload.status,
+      };
+      const newDetail = await TaskDetail.create(detailData);
+      return {
+        message: "Task Detail Each Entry Created Successfully!",
+        status: 201,
+      };
+    } catch (err) {
+      return { message: error.message, status: error.status };
+    }
+  };
+
+  // static getWeeklyTasks = async (startDate, endDate) => {
+  //   const tasks = await TaskStatusInfo.findAll({
+  //     include: [
+  //       {
+  //         model: TaskDetail,
+  //         as: "taskstaskdetails",
+  //         required: true, // ⬅️ important! INNER JOIN instead of LEFT JOIN
+  //         where: {
+  //           created_at: { [Op.between]: [startDate, endDate] },
+  //         },
+  //         attributes: [
+  //           "id",
+  //           "hour",
+  //           "minute",
+  //           "updated_at",
+  //           "daily_accomplishment",
+  //           "rca_investigation",
+  //           "resolution_and_steps",
+  //         ],
+  //       },
+  //       {
+  //         model: Colors,
+  //         as: "color",
+  //         attributes: ["code"],
+  //       },
+  //     ],
+  //     attributes: [
+  //       "id",
+  //       "ticket_id",
+  //       "task_code",
+  //       "task_type",
+  //       "status",
+  //       "created_at",
+  //     ],
+  //     order: [["created_at", "DESC"]],
+  //     raw: false,
+  //     nest: true,
+  //   });
+
+  //   // 🧩 Group by date
+  //   const grouped = {};
+
+  //   tasks.forEach((task) => {
+  //     const date = task.created_at.toISOString().split("T")[0];
+
+  //     // Each task can have multiple task details
+  //     (task.taskstaskdetails || []).forEach((detail) => {
+  //       if (!grouped[date]) grouped[date] = [];
+
+  //       grouped[date].push({
+  //         id: detail.id,
+  //         taskId: task.task_code,
+  //         ticketId: task.ticket_id,
+  //         taskType: task.task_type,
+  //         status: task.status,
+  //         updatedDate: detail.updated_at,
+  //         colorCode: task.color?.code || "#FFFFFF",
+  //         hours: detail.hour, // ✅ match model field
+  //         minutes: detail.minute, // ✅ match model field
+  //         dailyAccomplishments: detail.daily_accomplishment,
+  //         investigationRCA: detail.rca_investigation,
+  //         resolutions: detail.resolution_and_steps,
+  //       });
   //     });
-  //     if (!task) throw new Error("Task Id not found");
+  //   });
 
-  //     const detailData = {
-  //       tstatusId: task.id,
-  //       taskId: taskId,
-  //       task_type: task.task_type,
-  //     };
+  //   // 🧾 Format output
+  //   const week = Object.entries(grouped)
+  //     .map(([date, tasks]) => ({ date, tasks }))
+  //     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  //     switch (task.task_type) {
-  //       case "assignment":
-  //         if (!payload.daily_accomplishment)
-  //           return {
-  //             message: "daily_accomplishment is required!",
-  //             status: 403,
-  //           };
-  //         detailData.daily_accomplishment = payload.daily_accomplishment;
-  //         break;
-
-  //       case "issue":
-  //         if (!payload.rca_investigation && !payload.resolution_and_steps)
-  //           return {
-  //             message:
-  //               "rca_investigation and resolution_and_steps is required!",
-  //             status: 403,
-  //           };
-  //         detailData.rca_investigation = payload.rca_investigation;
-  //         if (payload.resolution_and_steps)
-  //           detailData.resolution_and_steps = payload.resolution_and_steps;
-  //         break;
-
-  //       case "change_request":
-  //         if (!payload.resolution_and_steps)
-  //           return {
-  //             message: "daily_accomplishment is required!",
-  //             status: 403,
-  //           };
-  //         detailData.resolution_and_steps = payload.resolution_and_steps;
-  //         break;
-
-  //       default:
-  //         return {
-  //           message: `Unsupported task type: ${task.task_type}`,
-  //           status: 403,
-  //         };
-  //     }
-
-  //     // 3️⃣ Create the detail entry
-  //     const newDetail = await TaskDetail.create(detailData);
-  //     return {
-  //       message: "Task Detail Entry Created Successfully!",
-  //       status: 201,
-  //     };
-  //   } catch (error) {
-  //     return { message: error.message, status: error.status };
-  //   }
+  //   return { week };
   // };
 
-  // 🔹 Login Employee
-  //   static async loginEmployee(email, password) {
-  //     const employee = await Employee.findOne({
-  //       where: { email },
-  //       include: [
-  //         {
-  //           model: Role,
-  //           as: "roles",
-  //           through: { attributes: [] },
-  //         },
-  //       ],
-  //     });
+  static getWeeklyTasks = async (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const tasks = await TaskStatusInfo.findAll({
+      include: [
+        {
+          model: TaskDetail,
+          as: "taskstaskdetails",
+          required: true, // only include tasks having details
+          where: {
+            created_at: { [Op.between]: [start, end] },
+          },
+          attributes: [
+            "id",
+            "hour",
+            "minute",
+            "created_at",
+            "updated_at",
+            "daily_accomplishment",
+            "rca_investigation",
+            "resolution_and_steps",
+          ],
+        },
+        {
+          model: Colors,
+          as: "color",
+          attributes: ["code"],
+        },
+      ],
+      attributes: [
+        "id",
+        "ticket_id",
+        "task_code",
+        "task_type",
+        "status",
+        "created_at",
+      ],
+      order: [["created_at", "DESC"]],
+      raw: false,
+      nest: true,
+    });
 
-  //     if (!employee) throw new Error("Employee not found");
+    // 🧩 Group by TaskDetail.created_at date
+    const grouped = {};
 
-  //     const isPasswordValid = await bcrypt.compare(password, employee.password);
-  //     if (!isPasswordValid) throw new Error("Invalid credentials");
+    tasks.forEach((task) => {
+      (task.taskstaskdetails || []).forEach((detail) => {
+        // Use TaskDetail.created_at for grouping, not TaskStatusInfo
+        const date = detail.created_at
+          ? detail.created_at.toISOString().split("T")[0]
+          : task.created_at.toISOString().split("T")[0];
 
-  //     const tokens = this.generateTokens(employee);
+        if (!grouped[date]) grouped[date] = [];
 
-  //     return {
-  //       employee: {
-  //         id: employee.id,
-  //         name: employee.name,
-  //         email: employee.email,
-  //         roles: employee.roles.map((r) => r.roleName),
-  //       },
-  //       ...tokens,
-  //     };
-  //   }
+        grouped[date].push({
+          id: detail.id,
+          taskId: task.task_code,
+          ticketId: task.ticket_id,
+          taskType: task.task_type,
+          status: task.status,
+          updatedDate: detail.updated_at,
+          colorCode: task.color?.code || "#FFFFFF",
+          hours: detail.hour,
+          minutes: detail.minute,
+          dailyAccomplishments: detail.daily_accomplishment,
+          investigationRCA: detail.rca_investigation,
+          resolutions: detail.resolution_and_steps,
+        });
+      });
+    });
 
-  // 🔹 Refresh Token
-  //   static async refreshAccessToken(refreshToken) {
-  //     if (!refreshToken) throw new Error("No refresh token provided");
+    // 🧾 Convert to array sorted by most recent date first
+    const week = Object.entries(grouped)
+      .map(([date, tasks]) => ({ date, tasks }))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  //     const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
-  //     const employee = await Employee.findByPk(decoded.id, {
-  //       include: [{ model: Role, as: "roles", through: { attributes: [] } }],
-  //     });
-
-  //     if (!employee) throw new Error("Employee not found");
-
-  //     return this.generateTokens(employee);
-  //   }
-
-  // 🔹 Get All Employees
-  //   static async getAllEmployees() {
-  //     return Employee.findAll({
-  //       include: [
-  //         { model: Role, as: "roles", through: { attributes: [] } }
-  //       ]
-  //     });
-  //   }
-
-  // 🔹 Get Employee by Role (e.g., Manager)
-  //   static async getEmployeesByRole(roleName) {
-  //     return Employee.findAll({
-  //       include: [
-  //         {
-  //           model: Role,
-  //           as: "roles",
-  //           where: { roleName },
-  //           through: { attributes: [] },
-  //         },
-  //       ],
-  //     });
-  //   }
-
-  // 🔹 Get Employee by ID
-  //   static async getEmployeeById(id) {
-  //     return Employee.findByPk(id, {
-  //       include: [{ model: Role, as: "roles", through: { attributes: [] } }],
-  //     });
-  //   }
+    return { week };
+  };
 }
 
 module.exports = TaskStatusInfoService;

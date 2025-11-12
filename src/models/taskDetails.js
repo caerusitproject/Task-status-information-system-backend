@@ -9,12 +9,34 @@ const TaskDetail = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    taskId: {
+    tstatusId: {
       type: DataTypes.INTEGER,
+      references: {
+        model: "taskStatusInfo",
+        key: "id",
+      },
+      // onDelete: "CASCADE", // optional but good practice
       allowNull: false,
     },
+    taskId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    hour: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    minute: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     task_type: {
-      type: DataTypes.ENUM("Assign", "Issue", "Change Request", "Ticket Less"), // ✅ no custom name
+      type: DataTypes.ENUM(
+        "assignment",
+        "issue",
+        "change_request",
+        "ticket_less"
+      ), // ✅ no custom name
       allowNull: false,
     },
     daily_accomplishment: {
