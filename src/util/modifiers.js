@@ -29,5 +29,9 @@ exports.generateFourWeekRanges = (dateStr, page = 1) => {
     });
   }
 
+  if (page < 1) {
+    result.reverse();
+  }
+
   return result;
 };

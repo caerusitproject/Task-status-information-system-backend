@@ -6,6 +6,7 @@ const {
   createTaskDetailEntry,
   createEachTimeTaskDetailEntry,
   getWeeklyTasks,
+  updateEachTaskWeek,
 } = require("../services/taskStatusInfoService");
 
 const router = express.Router();
@@ -78,7 +79,7 @@ const createTaskDetail = async (req, res) => {
 
     const result = await createTaskDetailEntry(taskId, payload);
 
-    res.status(201).json({
+    res.status(result.status).json({
       message: result.message,
       status: result.status,
     });
@@ -87,21 +88,21 @@ const createTaskDetail = async (req, res) => {
   }
 };
 
-const createTaskDetailStatusTime = async (req, res) => {
-  try {
-    const { taskId } = req.params;
-    const payload = req.body;
+// const createTaskDetailStatusTime = async (req, res) => {
+//   try {
+//     const { taskId } = req.params;
+//     const payload = req.body;
 
-    const result = await createEachTimeTaskDetailEntry(taskId, payload);
+//     const result = await createEachTimeTaskDetailEntry(taskId, payload);
 
-    res.status(201).json({
-      message: result.message,
-      status: result.status,
-    });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
+//     res.status(201).json({
+//       message: result.message,
+//       status: result.status,
+//     });
+//   } catch (error) {
+//     res.status(400).json({ message: error.message });
+//   }
+// };
 
 const getWeeklySummary = async (req, res) => {
   try {
@@ -122,9 +123,26 @@ const getWeeklySummary = async (req, res) => {
   }
 };
 
+const editEachTaskSheetDetail = async (req, res) => {
+  try {
+    const { updatedDate } = req.params;
+
+    if (!updatedDate) {
+      return res.status(400).json({ message: "Updated Date required" });
+    }
+
+    const data = await updateEachTaskWeek(req.params, req.body);
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching weekly summary:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   router,
   createTaskDetail,
-  createTaskDetailStatusTime,
   getWeeklySummary,
+  editEachTaskSheetDetail,
 };

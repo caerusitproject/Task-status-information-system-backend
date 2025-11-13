@@ -429,6 +429,53 @@ class TaskStatusInfoService {
     }
   }
 
+  static async updateEachTaskWeek(params, payload) {
+    try {
+      const { updatedDate } = params;
+      const fetchIdTask = await TaskStatusInfo.findOne({
+        where: { task_code: payload.taskId },
+      });
+
+      const fetchTaskDetail = await TaskDetail.findOne({
+        where: { tstatusId: fetchIdTask.id },
+      });
+
+      if (!fetchTaskDetail)
+        return { message: "Task Detail Id not present", status: 403 };
+
+      if (!fetchIdTask) return { message: "Task Id not present", status: 403 };
+
+      if (!updatedDate)
+        return { message: "Updated Date is required ", status: 403 };
+
+      const updateStatus = await TaskStatusInfo.update(
+        {
+          status: payload.status,
+        },
+        {
+          where: { task_code: payload.taskId },
+        }
+      );
+
+      const updateTaskDetailStatus = await TaskDetail.update(
+        {
+          daily_accomplishment: payload.daily_accomplishment,
+          rca_investigation: payload.rca_investigation,
+          resolution_and_steps: payload.resolution_and_steps,
+        },
+        {
+          where: {
+            task_code: fetchTaskDetail.id,
+            updated_at: new Date(updatedDate),
+          },
+        }
+      );
+      return { message: "Time Sheet Updated Successfully", status: 200 };
+    } catch (error) {
+      return { message: error.message, status: error.statusCode };
+    }
+  }
+
   static createTaskDetailEntry = async (taskId, payload) => {
     try {
       const task = await TaskStatusInfo.findOne({
@@ -446,7 +493,7 @@ class TaskStatusInfoService {
 
       switch (task.task_type) {
         case "assignment":
-          if (!payload.status || !payload.daily_accomplishment)
+          if (!payload.status)
             return {
               message: "status is required!",
               status: 403,
@@ -460,11 +507,7 @@ class TaskStatusInfoService {
           break;
 
         case "issue":
-          if (
-            !payload.status ||
-            !payload.rca_investigation ||
-            !payload.resolution_and_steps
-          )
+          if (!payload.status)
             return {
               message: "status is required!",
               status: 403,
