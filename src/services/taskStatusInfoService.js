@@ -669,16 +669,17 @@ class TaskStatusInfoService {
       raw: false,
       nest: true,
     });
-
     // 🧩 Group by TaskDetail.created_at date
     const grouped = {};
 
-    tasks.forEach((task) => {
-      (task.taskstaskdetails || []).forEach((detail) => {
+    tasks.map((task) => {
+      (task.taskstaskdetails || []).map((detail) => {
         // Use TaskDetail.created_at for grouping, not TaskStatusInfo
         const date = detail.created_at
           ? detail.created_at.toISOString().split("T")[0]
           : task.created_at.toISOString().split("T")[0];
+
+        const colorCode = task.color && task.color.code ? task.color.code : "";
 
         if (!grouped[date]) grouped[date] = [];
 
@@ -689,7 +690,7 @@ class TaskStatusInfoService {
           taskType: task.task_type,
           status: task.status,
           updatedDate: detail.updated_at,
-          colorCode: task.color?.code || "#FFFFFF",
+          colorCode,
           hours: detail.hour,
           minutes: detail.minute,
           dailyAccomplishments: detail.daily_accomplishment,
