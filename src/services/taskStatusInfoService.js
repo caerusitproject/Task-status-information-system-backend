@@ -9,7 +9,7 @@ const {
   Application,
   TicketingSystem,
 } = require("../models");
-const { generateFourWeekRanges } = require("../util/modifiers");
+const { generateFourWeekRanges, getNextDate } = require("../util/modifiers");
 const { raw } = require("body-parser");
 const { where, Op } = require("sequelize");
 require("dotenv").config();
@@ -461,7 +461,7 @@ class TaskStatusInfoService {
         {
           where: {
             id: findTaskDetailId.id,
-            // task_id: payload.taskId.toString(),
+            task_id: payload.taskId.toString(),
           },
         }
       );
@@ -480,7 +480,12 @@ class TaskStatusInfoService {
       //     },
       //   }
       // );
-      return { message: "Time Sheet Updated Successfully", status: 200 };
+      console.log("update____", updateTaskDetailId[0]);
+      if (updateTaskDetailId && updateTaskDetailId[0] == 0) {
+        return { message: "Time Sheet Id Mismatch", status: 403 };
+      } else {
+        return { message: "Time Sheet Updated Successfully", status: 200 };
+      }
     } catch (error) {
       console.log("error__", error);
       return { message: error.message, status: 403 };
@@ -690,7 +695,7 @@ class TaskStatusInfoService {
 
   static getWeeklyTasks = async (startDate, endDate) => {
     const start = new Date(startDate);
-    const end = new Date(endDate);
+    const end = new Date(getNextDate(endDate ? endDate : ""));
     const tasks = await TaskStatusInfo.findAll({
       include: [
         {
