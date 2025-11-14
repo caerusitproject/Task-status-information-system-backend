@@ -431,48 +431,59 @@ class TaskStatusInfoService {
 
   static async updateEachTaskWeek(params, payload) {
     try {
-      const { updatedDate } = params;
+      const { taskDetailId } = params;
+      // const nextDate = new Date(payload.updatedDate);
+      // nextDate.setDate(nextDate.getDate() + 1);
+
+      // const date = nextDate.getDate();
+      // const month = nextDate.getMonth() + 1; // getMonth() is zero-based
+      // const year = nextDate.getFullYear();
       const fetchIdTask = await TaskStatusInfo.findOne({
         where: { task_code: payload.taskId },
       });
 
-      const fetchTaskDetail = await TaskDetail.findOne({
-        where: { tstatusId: fetchIdTask.id },
-      });
-
-      if (!fetchTaskDetail)
-        return { message: "Task Detail Id not present", status: 403 };
-
       if (!fetchIdTask) return { message: "Task Id not present", status: 403 };
 
-      if (!updatedDate)
-        return { message: "Updated Date is required ", status: 403 };
+      const findTaskDetailId = await TaskDetail.findOne({
+        where: { id: taskDetailId },
+      });
+      if (!findTaskDetailId)
+        return { message: "Task Detail Id not present", status: 403 };
 
-      const updateStatus = await TaskStatusInfo.update(
+      const updateTaskDetailId = await TaskDetail.update(
         {
-          status: payload.status,
-        },
-        {
-          where: { task_code: payload.taskId },
-        }
-      );
-
-      const updateTaskDetailStatus = await TaskDetail.update(
-        {
+          hour: payload.hour,
+          minute: payload.minute,
           daily_accomplishment: payload.daily_accomplishment,
           rca_investigation: payload.rca_investigation,
           resolution_and_steps: payload.resolution_and_steps,
         },
         {
           where: {
-            task_code: fetchTaskDetail.id,
-            updated_at: new Date(updatedDate),
+            id: findTaskDetailId.id,
+            // task_id: payload.taskId.toString(),
           },
         }
       );
+
+      // const updateTaskDetailStatus = await TaskDetail.update(
+      //   {
+      //     daily_accomplishment: payload.daily_accomplishment,
+      //     rca_investigation: payload.rca_investigation,
+      //     resolution_and_steps: payload.resolution_and_steps,
+      //     hour: payload.hour,
+      //     minute: payload.minute,
+      //   },
+      //   {
+      //     where: {
+      //       id: payload.id,
+      //     },
+      //   }
+      // );
       return { message: "Time Sheet Updated Successfully", status: 200 };
     } catch (error) {
-      return { message: error.message, status: error.statusCode };
+      console.log("error__", error);
+      return { message: error.message, status: 403 };
     }
   }
 
@@ -480,6 +491,7 @@ class TaskStatusInfoService {
     try {
       const task = await TaskStatusInfo.findOne({
         where: { task_code: taskId.toString() },
+        raw: true,
       });
       if (!task) throw new Error("Task Id not found");
 
@@ -490,7 +502,6 @@ class TaskStatusInfoService {
         hour: payload.hour,
         minute: payload.minute,
       };
-
       switch (task.task_type) {
         case "assignment":
           if (!payload.status)
@@ -498,12 +509,13 @@ class TaskStatusInfoService {
               message: "status is required!",
               status: 403,
             };
-          if (payload.daily_accomplishment) {
-            detailData.daily_accomplishment = payload.daily_accomplishment;
-            detailData.hour = payload.hour;
-            detailData.minute = payload.minute;
-            // detailData.status = payload.status;
-          }
+          // if (payload.daily_accomplishment) {
+          detailData.daily_accomplishment = payload.daily_accomplishment;
+          detailData.hour = payload.hour;
+          detailData.minute = payload.minute;
+          console.log("id_________", detailData);
+          // detailData.status = payload.status;
+          // }
           break;
 
         case "issue":
@@ -512,8 +524,8 @@ class TaskStatusInfoService {
               message: "status is required!",
               status: 403,
             };
-          if (payload.resolution_and_steps || payload.rca_investigation)
-            detailData.rca_investigation = payload.rca_investigation;
+          // if (payload.resolution_and_steps || payload.rca_investigation)
+          detailData.rca_investigation = payload.rca_investigation;
           detailData.resolution_and_steps = payload.resolution_and_steps;
           detailData.hour = payload.hour;
           detailData.minute = payload.minute;
@@ -552,50 +564,55 @@ class TaskStatusInfoService {
       }
 
       // 3️⃣ Create the detail entry
-      let updateStatus = await TaskStatusInfo.update(
-        {
-          status: payload.status,
-        },
-        {
-          where: {
-            task_code: taskId,
-          },
-        }
-      );
+      // let updateStatus = await TaskStatusInfo.update(
+      //   {
+      //     status: payload.status,
+      //   },
+      //   {
+      //     where: {
+      //       task_code: taskId,
+      //     },
+      //   }
+      // );
       const newDetail = await TaskDetail.create(detailData);
+      console.log("create task sheet info___", newDetail.get({ plain: true }));
       return {
         message: "Task Detail Entry Created Successfully!",
         status: 201,
+        content:
+          newDetail &&
+          Object.keys(newDetail).length > 0 &&
+          newDetail.get({ plain: true }),
       };
     } catch (error) {
       return { message: error.message, status: error.status };
     }
   };
 
-  static createEachTimeTaskDetailEntry = async (taskId, payload) => {
-    try {
-      const task = await TaskStatusInfo.findOne({
-        where: { task_code: taskId.toString() },
-      });
-      if (!task) throw new Error("Task Id not found");
+  // static createEachTimeTaskDetailEntry = async (taskId, payload) => {
+  //   try {
+  //     const task = await TaskStatusInfo.findOne({
+  //       where: { task_code: taskId.toString() },
+  //     });
+  //     if (!task) throw new Error("Task Id not found");
 
-      const detailData = {
-        tstatusId: task.id,
-        taskId: taskId,
-        task_type: task.task_type,
-        hour: payload.hour,
-        minute: payload.minute,
-        status: payload.status,
-      };
-      const newDetail = await TaskDetail.create(detailData);
-      return {
-        message: "Task Detail Each Entry Created Successfully!",
-        status: 201,
-      };
-    } catch (err) {
-      return { message: error.message, status: error.status };
-    }
-  };
+  //     const detailData = {
+  //       tstatusId: task.id,
+  //       taskId: taskId,
+  //       task_type: task.task_type,
+  //       hour: payload.hour,
+  //       minute: payload.minute,
+  //       status: payload.status,
+  //     };
+  //     const newDetail = await TaskDetail.create(detailData);
+  //     return {
+  //       message: "Task Detail Each Entry Created Successfully!",
+  //       status: 201,
+  //     };
+  //   } catch (err) {
+  //     return { message: error.message, status: error.status };
+  //   }
+  // };
 
   // static getWeeklyTasks = async (startDate, endDate) => {
   //   const tasks = await TaskStatusInfo.findAll({
@@ -701,7 +718,7 @@ class TaskStatusInfoService {
         },
       ],
       attributes: [
-        "id",
+        // "id",
         "ticket_id",
         "task_code",
         "task_type",

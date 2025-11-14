@@ -82,6 +82,7 @@ const createTaskDetail = async (req, res) => {
     res.status(result.status).json({
       message: result.message,
       status: result.status,
+      content: result.content,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -125,15 +126,20 @@ const getWeeklySummary = async (req, res) => {
 
 const editEachTaskSheetDetail = async (req, res) => {
   try {
-    const { updatedDate } = req.params;
+    // const { updatedDate } = req.params;
 
-    if (!updatedDate) {
-      return res.status(400).json({ message: "Updated Date required" });
-    }
+    // if (!updatedDate) {
+    //   return res.status(400).json({ message: "Updated Date required" });
+    // }
 
-    const data = await updateEachTaskWeek(req.params, req.body);
+    const result = await updateEachTaskWeek(req.params, req.body);
 
-    res.status(200).json(data);
+    console.log("result__", result);
+
+    res.status(result.status).json({
+      message: result.message,
+      status: result.status,
+    });
   } catch (error) {
     console.error("Error fetching weekly summary:", error);
     res.status(500).json({ message: "Server error", error: error.message });
