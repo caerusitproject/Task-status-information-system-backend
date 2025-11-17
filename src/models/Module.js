@@ -1,8 +1,8 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../../config/db");
 
-const Application = sequelize.define(
-  "application_info",
+const Module = sequelize.define(
+  "module_info",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -12,6 +12,10 @@ const Application = sequelize.define(
     name: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    app_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     description: {
       type: DataTypes.TEXT,
@@ -29,13 +33,11 @@ const Application = sequelize.define(
     },
   },
   {
-    tableName: "application_info",
+    tableName: "module_info",
     timestamps: false,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
     underscored: true,
     freezeTableName: true,
   }
 );
 
-module.exports = Application;
+module.exports = Module;

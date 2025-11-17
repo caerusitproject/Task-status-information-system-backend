@@ -1,21 +1,21 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../../config/db");
 
-const Application = sequelize.define(
-  "application_info",
+const TaskDetailApplicationMap = sequelize.define(
+  "task_detail_application_map",
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
-      type: DataTypes.STRING,
+    task_detail_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+    application_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     created_at: {
       type: DataTypes.DATE,
@@ -29,13 +29,11 @@ const Application = sequelize.define(
     },
   },
   {
-    tableName: "application_info",
+    tableName: "task_detail_application_map",
     timestamps: false,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
     underscored: true,
     freezeTableName: true,
   }
 );
 
-module.exports = Application;
+module.exports = TaskDetailApplicationMap;

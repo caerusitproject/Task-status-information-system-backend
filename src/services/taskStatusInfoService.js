@@ -4,10 +4,13 @@ const {
   TaskStatusInfo,
   Colors,
   TaskDetail,
+  TaskDetailApplicationMap,
+  TaskDetailModuleMap,
   Role,
   EmployeeRole,
   Application,
   TicketingSystem,
+  ApplicationModule,
 } = require("../models");
 const { generateFourWeekRanges, getNextDate } = require("../util/modifiers");
 const { raw } = require("body-parser");
@@ -465,6 +468,26 @@ class TaskStatusInfoService {
           },
         }
       );
+
+      if (payload.applications?.length > 0) {
+        // task_detail → application mapping
+        const appData = payload.applications.map((app) => ({
+          task_detail_id: taskDetailId,
+          application_id: app.applicationId,
+        }));
+
+        await TaskDetailApplicationMap.bulkCreate(appData);
+
+        // application → modules mapping
+        const moduleData = payload.applications.flatMap((app) =>
+          app.moduleIds.map((modId) => ({
+            app_id: app.applicationId,
+            module_id: modId,
+          }))
+        );
+
+        await ApplicationModule.bulkCreate(moduleData);
+      }
 
       // const updateTaskDetailStatus = await TaskDetail.update(
       //   {

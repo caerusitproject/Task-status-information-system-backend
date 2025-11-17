@@ -9,6 +9,9 @@ const dbInfo = {};
 // ✅ Import all models
 dbInfo.Users = require("./User");
 dbInfo.Application = require("./Application");
+dbInfo.Module = require("./Module");
+dbInfo.ApplicationModule = require("./ApplicationModule");
+dbInfo.TaskDetailApplicationMap = require("./taskDetailApplicationMap");
 dbInfo.TicketingSystem = require("./ticketingSystem");
 dbInfo.TaskExecutionStatus = require("./taskExecutionStatus");
 dbInfo.TaskStatusAuditTrail = require("./taskStatusAuditTrail");
@@ -66,14 +69,14 @@ dbInfo.TicketingSystem.belongsTo(dbInfo.TaskStatusInfo, {
 });
 
 // APPLICATION ↔ TICKETING_SYSTEM
-dbInfo.Application.hasMany(dbInfo.TicketingSystem, {
-  foreignKey: "app_id",
-  as: "tickets",
-});
-dbInfo.TicketingSystem.belongsTo(dbInfo.Application, {
-  foreignKey: "app_id",
-  as: "application",
-});
+// dbInfo.Application.hasMany(dbInfo.TicketingSystem, {
+//   foreignKey: "app_id",
+//   as: "tickets",
+// });
+// dbInfo.TicketingSystem.belongsTo(dbInfo.Application, {
+//   foreignKey: "app_id",
+//   as: "application",
+// });
 
 // TASK DETAIL ↔ TASK_STATUS_INFO
 
@@ -95,6 +98,31 @@ dbInfo.Colors.hasMany(dbInfo.TaskStatusInfo, {
 dbInfo.TaskStatusInfo.belongsTo(dbInfo.Colors, {
   foreignKey: "color_id",
   as: "color",
+});
+
+// Many-to-Many with Role
+dbInfo.Application.hasMany(dbInfo.Module, {
+  foreignKey: "app_id",
+  as: "module",
+});
+
+dbInfo.Module.belongsTo(dbInfo.Application, {
+  foreignKey: "app_id",
+  as: "applications",
+});
+
+dbInfo.TaskDetail.belongsToMany(dbInfo.Application, {
+  through: dbInfo.TaskDetailApplicationMap,
+  foreignKey: "task_detail_id",
+  otherKey: "application_id",
+  as: "applications",
+});
+
+dbInfo.Application.belongsToMany(dbInfo.TaskDetail, {
+  through: dbInfo.TaskDetailApplicationMap,
+  foreignKey: "application_id",
+  otherKey: "task_detail_id",
+  as: "taskDetails",
 });
 
 // ✅ Attach Sequelize references at the end

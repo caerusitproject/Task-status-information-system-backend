@@ -8,37 +8,28 @@ require("dotenv").config();
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 // const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "refreshsecretkey";
 
-class ApplicationInfoService {
+class ModuleInfoService {
   // 🔹 Create Application Status Info
-  static async createApplicationInfo(data) {
-    const { applicationName, applicationDescription, modules } = data;
+  static async createModuleInfo(data) {
+    const { moduleName, moduleDescription, appid } = data;
 
     // Validate required fields
-    if (!applicationName || !applicationDescription) {
+    if (!moduleName || !moduleDescription) {
       return { message: "Invalid data provided", status: 400 };
     }
 
     try {
       // 1️⃣ Create the Application
-      const applicationInfo = await Application.create({
-        name: applicationName,
-        description: applicationDescription,
+      const moduleInfo = await Module.create({
+        name: moduleName,
+        description: moduleDescription,
+        app_id: appid,
       });
 
-      // 2️⃣ If module IDs exist, create mapping
-      if (Array.isArray(modules) && modules.length > 0) {
-        const moduleData = modules.map((moduleId) => ({
-          app_id: applicationInfo.id,
-          module_id: moduleId,
-        }));
-
-        await ApplicationModule.bulkCreate(moduleData);
-      }
-
       return {
-        message: "Application created successfully with modules",
+        message: "Module created successfully",
         status: 200,
-        applicationId: applicationInfo.id,
+        moduleId: moduleInfo.id,
       };
     } catch (err) {
       console.error("Error creating application info:", err);
@@ -51,20 +42,13 @@ class ApplicationInfoService {
 
   // 🔹 Get Application Status Info
 
-  static async getApplicationInfo(data = {}) {
+  static async getModuleInfo(data = {}) {
     try {
       const page = data.page ? parseInt(data.page, 10) : null;
       const pageSize = data.pagesize ? parseInt(data.pagesize, 10) : null;
 
       const options = {
         order: [["id", "ASC"]],
-        include: [
-          {
-            model: Module,
-            as: "module", // alias from your association
-            attributes: ["id", "name"],
-          },
-        ],
       };
 
       // Apply pagination only if both are provided
@@ -73,11 +57,11 @@ class ApplicationInfoService {
         options.offset = (page - 1) * pageSize;
       }
 
-      const result = await Application.findAndCountAll(options);
+      const result = await Module.findAndCountAll(options);
 
-      // if (!result.rows || result.rows.length === 0) {
-      //   return { message: "No applications found", status: 403 };
-      // }
+      //   if (!result.rows || result.rows.length === 0) {
+      //     return { message: "No Modules found", status: 403 };
+      //   }
 
       // If no pagination requested → return all data
       if (!page || !pageSize) {
@@ -103,54 +87,45 @@ class ApplicationInfoService {
         rows: result.rows,
       };
     } catch (error) {
-      console.error("Error fetching Application Info:", error);
+      console.error("Error fetching Modules Info:", error);
       return { message: "Internal Server Error", status: 500 };
     }
   }
-  static async editApplicationInfo(data, body) {
-    try {
-      const { appId } = data;
 
-      if (!appId) {
-        return { message: "Application ID not found", status: 403 };
+  static async editModuleInfo(data, body) {
+    try {
+      const { moduleId } = data;
+
+      if (!moduleId) {
+        return { message: "Module ID not found", status: 403 };
       }
 
-      const application = await Application.findByPk(appId);
+      const module = await Module.findByPk(moduleId);
 
-      if (!application) {
-        return { message: "Application not found!", status: 404 };
+      if (!module) {
+        return { message: "Module not found!", status: 404 };
       }
 
       // Validate body
-      const { applicationName, applicationDescription, modules } = body;
+      const { moduleName, moduleDescription, appid } = body;
 
-      if (!applicationName || !applicationDescription) {
+      if (!moduleName || !moduleDescription) {
         return { message: "Invalid data provided", status: 400 };
       }
 
       // ---------- UPDATE ONLY BASIC DETAILS ----------
-      await Application.update(
+      await Module.update(
         {
-          name: applicationName,
-          description: applicationDescription,
+          name: moduleName,
+          description: moduleDescription,
+          app_id: appid,
         },
-        { where: { id: appId } }
+        { where: { id: moduleId } }
       );
 
-      // ---------- UPDATE MODULE MAPPINGS ----------
-      if (Array.isArray(modules)) {
-        // fetch module rows
-        const moduleRows = await Module.findAll({
-          where: { id: modules },
-        });
-
-        await application.setModule(moduleRows);
-        // (because alias is `module`)
-      }
-
-      return { message: "Application updated successfully", status: 200 };
+      return { message: "Modules updated successfully", status: 200 };
     } catch (error) {
-      console.error("Error updating Application:", error);
+      console.error("Error updating Modules:", error);
       return { message: "Internal Server Error", status: 500 };
     }
   }
@@ -239,4 +214,4 @@ class ApplicationInfoService {
   // }
 }
 
-module.exports = ApplicationInfoService;
+module.exports = ModuleInfoService;

@@ -50,16 +50,8 @@ const TaskStatusInfo = sequelize.define(
       ),
       allowNull: false,
     },
-    application_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
     ticketing_system_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    module: {
-      type: DataTypes.STRING,
       allowNull: true,
     },
     status: {

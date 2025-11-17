@@ -2,37 +2,37 @@ const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../../config/db");
 
 const Application = sequelize.define(
-  "application_info",
+  "application_module",
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    app_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
-    description: {
-      type: DataTypes.TEXT,
+    module_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
+      default: "CURRENT_TIMESTAMP",
     },
     updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
+      default: "CURRENT_TIMESTAMP",
     },
   },
   {
-    tableName: "application_info",
+    tableName: "application_module",
     timestamps: false,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
     underscored: true,
     freezeTableName: true,
   }
