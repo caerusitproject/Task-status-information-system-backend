@@ -26,6 +26,10 @@ const TaskDetail = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    sr_no: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     taskId: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -48,15 +52,15 @@ const TaskDetail = sequelize.define(
       allowNull: false,
     },
     daily_accomplishment: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT("long"),
       allowNull: true,
     },
     rca_investigation: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT("long"),
       allowNull: true,
     },
     resolution_and_steps: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT("long"),
       allowNull: true,
     },
     created_at: {

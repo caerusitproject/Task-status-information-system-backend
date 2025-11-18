@@ -27,6 +27,7 @@ async function seedColorsOnce() {
       "#ffc199",
       "#d7aefc",
       "#99ccff",
+      "#ffffff56",
     ];
 
     await Colors.bulkCreate(colorCodes.map((code) => ({ code })));

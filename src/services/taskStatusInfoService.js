@@ -4,6 +4,7 @@ const {
   TaskStatusInfo,
   Colors,
   TaskDetail,
+  Module,
   TaskDetailApplicationMap,
   TaskDetailModuleMap,
   Role,
@@ -547,6 +548,7 @@ class TaskStatusInfoService {
       const detailData = {
         tstatusId: task.id,
         taskId: taskId,
+        sr_no: task.sr_no,
         task_type: task.task_type,
         hour: payload.hour,
         minute: payload.minute,
@@ -753,6 +755,9 @@ class TaskStatusInfoService {
             "id",
             "hour",
             "minute",
+            "sr_no",
+            "app_id",
+            "module_id",
             "created_at",
             "updated_at",
             "daily_accomplishment",
@@ -781,6 +786,57 @@ class TaskStatusInfoService {
     // 🧩 Group by TaskDetail.created_at date
     const grouped = {};
 
+    for (const ele of tasks) {
+      if (ele && Array.isArray(ele.taskstaskdetails)) {
+        for (const item of ele.taskstaskdetails) {
+          // ----------------------
+          // APP NAME
+          // ----------------------
+          let currentAppName = "";
+
+          if (item.app_id) {
+            const app = await Application.findOne({
+              where: { id: item.app_id },
+              raw: true,
+            });
+
+            currentAppName = app?.name || "";
+          }
+
+          item.appName = currentAppName;
+
+          // ----------------------
+          // MODULE NAME (single or comma separated)
+          // ----------------------
+          let moduleName = "";
+
+          if (item.module_id) {
+            const moduleIds = item.module_id.toString().split(",");
+
+            // Fetch all module names using Promise.all
+            const modules = await Promise.all(
+              moduleIds.map(async (id) => {
+                const mod = await Module.findOne({
+                  where: { id },
+                  raw: true,
+                });
+                return mod?.name || "";
+              })
+            );
+
+            // Join names → "Finance, HR"
+            moduleName = modules.filter(Boolean).join(",");
+          }
+
+          item.moduleName = moduleName;
+        }
+      }
+    }
+
+    // let fetchAppName = await Application.findOne({
+    //   where: { id: item.taskstaskdetails.app_id },
+    // });
+
     tasks.map((task) => {
       (task.taskstaskdetails || []).map((detail) => {
         // Use TaskDetail.created_at for grouping, not TaskStatusInfo
@@ -802,6 +858,9 @@ class TaskStatusInfoService {
           colorCode,
           hours: detail.hour,
           minutes: detail.minute,
+          sr_no: detail.sr_no,
+          appName: detail.appName || "",
+          modulename: detail.moduleName || "",
           dailyAccomplishments: detail.daily_accomplishment,
           investigationRCA: detail.rca_investigation,
           resolutions: detail.resolution_and_steps,

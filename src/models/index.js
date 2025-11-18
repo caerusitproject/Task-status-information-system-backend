@@ -11,7 +11,7 @@ dbInfo.Users = require("./User");
 dbInfo.Application = require("./Application");
 dbInfo.Module = require("./Module");
 dbInfo.ApplicationModule = require("./ApplicationModule");
-dbInfo.TaskDetailApplicationMap = require("./taskDetailApplicationMap");
+// dbInfo.TaskDetailApplicationMap = require("./taskDetailApplicationMap");
 dbInfo.TicketingSystem = require("./ticketingSystem");
 dbInfo.TaskExecutionStatus = require("./taskExecutionStatus");
 dbInfo.TaskStatusAuditTrail = require("./taskStatusAuditTrail");
@@ -111,19 +111,19 @@ dbInfo.Module.belongsTo(dbInfo.Application, {
   as: "applications",
 });
 
-dbInfo.TaskDetail.belongsToMany(dbInfo.Application, {
-  through: dbInfo.TaskDetailApplicationMap,
-  foreignKey: "task_detail_id",
-  otherKey: "application_id",
-  as: "applications",
-});
+// dbInfo.TaskDetail.belongsToMany(dbInfo.Application, {
+//   through: dbInfo.TaskDetailApplicationMap,
+//   foreignKey: "task_detail_id",
+//   otherKey: "application_id",
+//   as: "applications",
+// });
 
-dbInfo.Application.belongsToMany(dbInfo.TaskDetail, {
-  through: dbInfo.TaskDetailApplicationMap,
-  foreignKey: "application_id",
-  otherKey: "task_detail_id",
-  as: "taskDetails",
-});
+// dbInfo.Application.belongsToMany(dbInfo.TaskDetail, {
+//   through: dbInfo.TaskDetailApplicationMap,
+//   foreignKey: "application_id",
+//   otherKey: "task_detail_id",
+//   as: "taskDetails",
+// });
 
 // ✅ Attach Sequelize references at the end
 
