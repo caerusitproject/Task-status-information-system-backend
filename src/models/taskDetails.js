@@ -18,6 +18,14 @@ const TaskDetail = sequelize.define(
       // onDelete: "CASCADE", // optional but good practice
       allowNull: false,
     },
+    app_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    module_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     taskId: {
       type: DataTypes.STRING,
       allowNull: false,

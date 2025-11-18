@@ -453,6 +453,18 @@ class TaskStatusInfoService {
       if (!findTaskDetailId)
         return { message: "Task Detail Id not present", status: 403 };
 
+      const updateStatus = await TaskStatusInfo.update(
+        {
+          status: payload.status,
+        },
+        {
+          where: {
+            id: findTaskDetailId.id,
+            task_code: payload.taskId.toString(),
+          },
+        }
+      );
+
       const updateTaskDetailId = await TaskDetail.update(
         {
           hour: payload.hour,
@@ -470,14 +482,6 @@ class TaskStatusInfoService {
       );
 
       if (payload.applications?.length > 0) {
-        // task_detail → application mapping
-        const appData = payload.applications.map((app) => ({
-          task_detail_id: taskDetailId,
-          application_id: app.applicationId,
-        }));
-
-        await TaskDetailApplicationMap.bulkCreate(appData);
-
         // application → modules mapping
         const moduleData = payload.applications.flatMap((app) =>
           app.moduleIds.map((modId) => ({
@@ -486,7 +490,24 @@ class TaskStatusInfoService {
           }))
         );
 
-        await ApplicationModule.bulkCreate(moduleData);
+        console.log("module___", moduleData);
+
+        const appIds = [...new Set(moduleData.map((m) => m.app_id))].join(",");
+        const moduleIds = moduleData.map((m) => m.module_id).join(",");
+
+        // Update the single TaskDetail row
+        await TaskDetail.update(
+          {
+            app_id: appIds,
+            module_id: moduleIds,
+          },
+          {
+            where: {
+              id: findTaskDetailId.id,
+              task_id: payload.taskId.toString(),
+            },
+          }
+        );
       }
 
       // const updateTaskDetailStatus = await TaskDetail.update(
