@@ -13,9 +13,14 @@ const {
   TicketingSystem,
   ApplicationModule,
 } = require("../models");
-const { generateFourWeekRanges, getNextDate } = require("../util/modifiers");
+const {
+  generateFourWeekRanges,
+  getNextDate,
+  extractQueries,
+} = require("../util/modifiers");
 const { raw } = require("body-parser");
 const { where, Op } = require("sequelize");
+const sequelize = require("../../config/db");
 require("dotenv").config();
 
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -665,79 +670,62 @@ class TaskStatusInfoService {
   //   }
   // };
 
-  // static getWeeklyTasks = async (startDate, endDate) => {
-  //   const tasks = await TaskStatusInfo.findAll({
-  //     include: [
-  //       {
-  //         model: TaskDetail,
-  //         as: "taskstaskdetails",
-  //         required: true, // ⬅️ important! INNER JOIN instead of LEFT JOIN
-  //         where: {
-  //           created_at: { [Op.between]: [startDate, endDate] },
-  //         },
-  //         attributes: [
-  //           "id",
-  //           "hour",
-  //           "minute",
-  //           "updated_at",
-  //           "daily_accomplishment",
-  //           "rca_investigation",
-  //           "resolution_and_steps",
-  //         ],
-  //       },
-  //       {
-  //         model: Colors,
-  //         as: "color",
-  //         attributes: ["code"],
-  //       },
-  //     ],
-  //     attributes: [
-  //       "id",
-  //       "ticket_id",
-  //       "task_code",
-  //       "task_type",
-  //       "status",
-  //       "created_at",
-  //     ],
-  //     order: [["created_at", "DESC"]],
-  //     raw: false,
-  //     nest: true,
-  //   });
+  static fetchQuerySuggestion = async (Query) => {
+    try {
+      // const TaskId = taskId.trim();
+      const query = Query.trim();
 
-  //   // 🧩 Group by date
-  //   const grouped = {};
+      if (!query) {
+        return []; // return empty if no query
+      }
 
-  //   tasks.forEach((task) => {
-  //     const date = task.created_at.toISOString().split("T")[0];
+      // Step 1: fetch rows which contain HTML text
+      const results = await TaskDetail.findAll({
+        where: {
+          // task_id: TaskId,
+          [Op.or]: [
+            { daily_accomplishment: { [Op.iLike]: `%${query}%` } },
+            { rca_investigation: { [Op.iLike]: `%${query}%` } },
+            { resolution_and_steps: { [Op.iLike]: `%${query}%` } },
+          ],
+        },
+        raw: true,
+        order: [
+          ["task_id", "DESC"], // priority 1
+          ["created_at", "DESC"], // priority 2 (optional)
+        ],
+        limit: 10,
+      });
 
-  //     // Each task can have multiple task details
-  //     (task.taskstaskdetails || []).forEach((detail) => {
-  //       if (!grouped[date]) grouped[date] = [];
+      let allQueries = [];
+      console.log("results", results);
+      // Step 2: Extract queries from EACH HTML field
+      for (const row of results) {
+        const html1 = row.daily_accomplishment || "";
+        const html2 = row.rca_investigation || "";
+        const html3 = row.resolution_and_steps || "";
 
-  //       grouped[date].push({
-  //         id: detail.id,
-  //         taskId: task.task_code,
-  //         ticketId: task.ticket_id,
-  //         taskType: task.task_type,
-  //         status: task.status,
-  //         updatedDate: detail.updated_at,
-  //         colorCode: task.color?.code || "#FFFFFF",
-  //         hours: detail.hour, // ✅ match model field
-  //         minutes: detail.minute, // ✅ match model field
-  //         dailyAccomplishments: detail.daily_accomplishment,
-  //         investigationRCA: detail.rca_investigation,
-  //         resolutions: detail.resolution_and_steps,
-  //       });
-  //     });
-  //   });
+        allQueries.push(...extractQueries(html1));
+        allQueries.push(...extractQueries(html2));
+        allQueries.push(...extractQueries(html3));
+      }
 
-  //   // 🧾 Format output
-  //   const week = Object.entries(grouped)
-  //     .map(([date, tasks]) => ({ date, tasks }))
-  //     .sort((a, b) => new Date(b.date) - new Date(a.date));
+      // Step 3: Now clean-filter the extracted SQL queries
+      const filtered = allQueries.filter((q) =>
+        q.toLowerCase().includes(query.toLowerCase())
+      );
 
-  //   return { week };
-  // };
+      const clean = filtered.map((q) => q.replace(/"/g, "'"));
+      let dumpArr = clean.slice(0, 10);
+
+      console.log("Clean SQL Suggestions =>", dumpArr);
+
+      return { content: clean };
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
 
   static getWeeklyTasks = async (startDate, endDate) => {
     const start = new Date(startDate);

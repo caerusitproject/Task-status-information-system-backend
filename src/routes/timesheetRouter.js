@@ -92,6 +92,8 @@ router.post("/create-task-details/:taskId", TaskController.createTaskDetail);
 
 router.get("/weekly-summary-view", TaskController.getWeeklySummary);
 
+router.get("/getquery-suggestions", TaskController.fetchSuggestions);
+
 router.put(
   "/edit-each-task-details/:taskDetailId",
   TaskController.editEachTaskSheetDetail

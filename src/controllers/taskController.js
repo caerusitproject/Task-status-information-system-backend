@@ -7,6 +7,7 @@ const {
   createEachTimeTaskDetailEntry,
   getWeeklyTasks,
   updateEachTaskWeek,
+  fetchQuerySuggestion,
 } = require("../services/taskStatusInfoService");
 
 const router = express.Router();
@@ -146,9 +147,34 @@ const editEachTaskSheetDetail = async (req, res) => {
   }
 };
 
+const fetchSuggestions = async (req, res) => {
+  try {
+    // const { taskId } = req.params;
+    // e.g., ?startDate=2025-11-05&endDate=2025-11-10
+
+    const { query } = req.query;
+
+    // if (!taskId) {
+    //   return res.status(400).json({ message: "Task Id required!" });
+    // }
+
+    if (!query) {
+      return res.status(400).json({ message: "Query is required!" });
+    }
+
+    const data = await fetchQuerySuggestion(query);
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching Query Suggestions!", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   router,
   createTaskDetail,
   getWeeklySummary,
   editEachTaskSheetDetail,
+  fetchSuggestions,
 };
