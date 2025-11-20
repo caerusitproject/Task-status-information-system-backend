@@ -121,6 +121,18 @@ dbInfo.Module.belongsTo(dbInfo.Application, {
   as: "applications",
 });
 
+// dbInfo.TaskDetail.belongsTo(dbInfo.Application, {
+//   foreignKey: "app_id",
+//   targetKey: "id",
+//   as: "application",
+// });
+
+// dbInfo.TaskDetail.belongsTo(dbInfo.Report, {
+//   foreignKey: "report_id",
+//   targetKey: "id",
+//   as: "report",
+// });
+
 // dbInfo.TaskDetail.belongsToMany(dbInfo.Application, {
 //   through: dbInfo.TaskDetailApplicationMap,
 //   foreignKey: "task_detail_id",

@@ -1,22 +1,22 @@
 const ReportService = require("../services/reportService");
 const { generateWeeklySummaryPDF } = require("../util/pdfgenerator");
-const { getStartAndEndOfMonth } = require("../util/modifiers");
+const { generateTasksExcelFromReport } = require("../util/modifiers");
 // const path = require("path");
 // const fs = require("fs");
 
-// exports.taskExcel = async (req, res, next) => {
-//   try {
-//     const buffer = await reportService.generateTasksExcel();
-//     res.setHeader("Content-Disposition", 'attachment; filename="tasks.xlsx"');
-//     res.setHeader(
-//       "Content-Type",
-//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//     );
-//     res.send(buffer);
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+exports.taskExcel = async (req, res, next) => {
+  try {
+    const buffer = await reportService.generateTasksExcel();
+    res.setHeader("Content-Disposition", 'attachment; filename="tasks.xlsx"');
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(buffer);
+  } catch (err) {
+    next(err);
+  }
+};
 
 // exports.taskPdf = async (req, res, next) => {
 //   try {
@@ -80,6 +80,25 @@ const viewReport = async (req, res) => {
   }
 };
 
+const createPdfTimeSheetReport = async (req, res) => {
+  try {
+    const newStatusInfo = await ReportService.getTimeSheetDetails(
+      req.body.startDate,
+      req.body.endDate
+    );
+
+    console.log("report array___", newStatusInfo);
+
+    const generateExcel = generateTasksExcelFromReport(newStatusInfo);
+    console.log("excel buffer__", await generateExcel);
+    res.status(201).json({
+      message: "Excel generated Successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // exports.taskPdf = async (req, res, next) => {
 //   try {
 //     // Extract body params
@@ -127,4 +146,4 @@ const viewReport = async (req, res) => {
 //   }
 // };
 
-module.exports = { createReport, viewReport };
+module.exports = { createReport, viewReport, createPdfTimeSheetReport };

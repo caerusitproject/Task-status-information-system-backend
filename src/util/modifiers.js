@@ -1,3 +1,4 @@
+const ExcelJS = require("exceljs");
 exports.generateFourWeekRanges = (dateStr, page = 1) => {
   const inputDate = new Date(dateStr);
 
@@ -151,4 +152,90 @@ exports.cleanSQL = (sql) => {
     .replace(/FROM/g, " FROM ")
     .replace(/\s+/g, " ")
     .trim();
+};
+exports.generateTasksExcelFromReport = async (data) => {
+  // Step 1 — Deduplicate CSV strings
+  const cleanedData = data.map((item) => ({
+    ...item,
+
+    module_names: item.module_names
+      ? [...new Set(item.module_names.split(",").map((s) => s.trim()))].join(
+          ", "
+        )
+      : "",
+
+    report_names: item.report_names
+      ? [...new Set(item.report_names.split(",").map((s) => s.trim()))].join(
+          ", "
+        )
+      : "",
+  }));
+
+  // Step 2 — Create Excel
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Task Report");
+
+  ws.columns = [
+    { header: "TStatus ID", key: "tstatus_id", width: 12 },
+    { header: "Application ID", key: "app_id", width: 15 },
+    { header: "Application Name", key: "application_name", width: 20 },
+
+    { header: "Module IDs", key: "module_id", width: 20 },
+    { header: "Module Names", key: "module_names", width: 35 },
+
+    { header: "SR No", key: "sr_no", width: 15 },
+    { header: "Task ID", key: "task_id", width: 20 },
+
+    { header: "Report IDs", key: "report_id", width: 20 },
+    { header: "Report Names", key: "report_names", width: 35 },
+
+    { header: "Hour", key: "hour", width: 10 },
+    { header: "Minute", key: "minute", width: 10 },
+
+    { header: "Task Type", key: "task_type", width: 18 },
+
+    { header: "Daily Accomplishment", key: "daily_accomplishment", width: 40 },
+    { header: "RCA Investigation", key: "rca_investigation", width: 40 },
+    { header: "Resolution Steps", key: "resolution_and_steps", width: 40 },
+
+    { header: "Created At", key: "created_at", width: 25 },
+    { header: "Updated At", key: "updated_at", width: 25 },
+  ];
+
+  // Step 3 — Add rows
+  cleanedData.forEach((item) => {
+    ws.addRow({
+      tstatus_id: item.tstatus_id,
+      app_id: item.app_id,
+      application_name: item.application_name,
+
+      module_id: item.module_id,
+      module_names: item.module_names,
+
+      sr_no: item.sr_no,
+      task_id: item.task_id,
+
+      report_id: item.report_id,
+      report_names: item.report_names,
+
+      hour: item.hour,
+      minute: item.minute,
+      task_type: item.task_type,
+
+      daily_accomplishment: item.daily_accomplishment || "",
+      rca_investigation: item.rca_investigation || "",
+      resolution_and_steps: item.resolution_and_steps || "",
+
+      created_at: item.created_at
+        ? new Date(item.created_at).toLocaleString()
+        : "",
+      updated_at: item.updated_at
+        ? new Date(item.updated_at).toLocaleString()
+        : "",
+    });
+  });
+
+  // Step 4 — Return Excel buffer
+  const buf = await wb.xlsx.writeBuffer();
+  return buf;
 };

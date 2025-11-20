@@ -2,7 +2,7 @@
 const { Op, fn, col, literal } = require("sequelize");
 const { sequelize } = require("../models");
 const PDFDocument = require("pdfkit");
-const { Report } = require("../models");
+const { Report, TaskDetail, Application, Module } = require("../models");
 const streamBuffers = require("stream-buffers");
 
 class ReportInfoService {
@@ -88,40 +88,122 @@ class ReportInfoService {
       return { message: "Internal Server Error", status: 500 };
     }
   }
-  static async generateTasksExcel() {
-    const tasks = await Task.findAll({ order: [["createdAt", "DESC"]] });
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("Tasks");
+  // static async generateTasksExcel() {
+  //   const tasks = await Task.findAll({ order: [["createdAt", "DESC"]] });
+  //   const wb = new ExcelJS.Workbook();
+  //   const ws = wb.addWorksheet("Tasks");
 
-    ws.columns = [
-      { header: "Task ID", key: "id", width: 36 },
-      { header: "Title", key: "taskTitle", width: 30 },
-      { header: "Type", key: "taskType", width: 15 },
-      { header: "Application", key: "applicationName", width: 20 },
-      { header: "Module", key: "module", width: 20 },
-      { header: "Status", key: "status", width: 15 },
-      { header: "% Complete", key: "percentageComplete", width: 12 },
-      { header: "Created By", key: "createdBy", width: 20 },
-      { header: "Created At", key: "createdAt", width: 22 },
-    ];
+  //   ws.columns = [
+  //     { header: "Task ID", key: "id", width: 36 },
+  //     { header: "Title", key: "taskTitle", width: 30 },
+  //     { header: "Type", key: "taskType", width: 15 },
+  //     { header: "Application", key: "applicationName", width: 20 },
+  //     { header: "Module", key: "module", width: 20 },
+  //     { header: "Status", key: "status", width: 15 },
+  //     { header: "% Complete", key: "percentageComplete", width: 12 },
+  //     { header: "Created By", key: "createdBy", width: 20 },
+  //     { header: "Created At", key: "createdAt", width: 22 },
+  //   ];
 
-    tasks.forEach((t) => {
-      ws.addRow({
-        id: t.id,
-        taskTitle: t.taskTitle,
-        taskType: t.taskType,
-        applicationName: t.applicationName,
-        module: t.module,
-        status: t.status,
-        percentageComplete: t.percentageComplete,
-        createdBy: t.createdBy,
-        createdAt: t.createdAt,
-      });
+  //   tasks.forEach((t) => {
+  //     ws.addRow({
+  //       id: t.id,
+  //       taskTitle: t.taskTitle,
+  //       taskType: t.taskType,
+  //       applicationName: t.applicationName,
+  //       module: t.module,
+  //       status: t.status,
+  //       percentageComplete: t.percentageComplete,
+  //       createdBy: t.createdBy,
+  //       createdAt: t.createdAt,
+  //     });
+  //   });
+
+  //   const buf = await wb.xlsx.writeBuffer();
+  //   return buf;
+  // }
+
+  static async getTimeSheetDetails(startDate, endDate) {
+    const query = `
+    SELECT
+    td.tstatus_id,
+    td.app_id,
+    app.name AS application_name,
+
+    td.module_id,
+    STRING_AGG(m.name, ', ') AS module_names,
+
+    td.sr_no,
+    td.task_id,
+    td.report_id,
+    STRING_AGG(r.name, ', ') AS report_names,
+
+    td.hour,
+    td.minute,
+    td.task_type,
+    td.daily_accomplishment,
+    td.rca_investigation,
+    td.resolution_and_steps,
+    td.created_at,
+    td.updated_at
+FROM "taskDetail" td
+
+LEFT JOIN application_info app
+    ON app.id = td.app_id::int
+
+LEFT JOIN module_info m
+    ON m.id = ANY ( string_to_array(td.module_id, ',')::int[] )
+
+LEFT JOIN report_info r
+    ON r.id = ANY ( string_to_array(td.report_id, ',')::int[] )
+
+    WHERE 
+        td.created_at BETWEEN :startDate AND :endDate
+
+GROUP BY
+    td.id, td.tstatus_id, td.app_id, app.name,
+    td.module_id,
+    td.sr_no, td.task_id, td.report_id,
+    td.hour, td.minute, td.task_type,
+    td.daily_accomplishment, td.rca_investigation,
+    td.resolution_and_steps,
+    td.created_at, td.updated_at
+
+ORDER BY td.created_at DESC;
+  `;
+
+    const data = await sequelize.query(query, {
+      replacements: { startDate, endDate },
+      type: sequelize.QueryTypes.SELECT,
     });
 
-    const buf = await wb.xlsx.writeBuffer();
-    return buf;
+    if (data && data.length > 0) {
+      const revisedData = data.map((item) => ({
+        ...item,
+
+        module_names: item.module_names
+          ? [
+              ...new Set(item.module_names.split(",").map((s) => s.trim())),
+            ].join(", ")
+          : null,
+
+        report_names: item.report_names
+          ? [
+              ...new Set(item.report_names.split(",").map((s) => s.trim())),
+            ].join(", ")
+          : null,
+      }));
+      return revisedData;
+      // return {
+      //   count: revisedData,
+      //   status: 201,
+      //   message: "Excel Generated Successfully",
+      // };
+    } else {
+      return [];
+    }
   }
+
   // exports.generateTasksPdf = async ({employeeName,startDate,endDate}) => {
   //   // const tasks = await TaskStatusInfo.findAll({ order: [['created_at','DESC']] });
   //   console.log('datesss',new Date(startDate), new Date(endDate))
