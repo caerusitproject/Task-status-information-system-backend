@@ -797,27 +797,25 @@ class TaskStatusInfoService {
               raw: true,
             });
 
-            currentAppName = app?.name || "";
+            currentAppName = { id: app?.id, appName: app?.name } || "";
           }
 
           if (item.report_id) {
             const reportIds = item.report_id.toString().split(",");
 
             // Fetch all module names using Promise.all
-            const reports = await Promise.all(
+            let reports = await Promise.all(
               reportIds.map(async (id) => {
                 const report = await Report.findOne({
                   where: { id },
                   raw: true,
                 });
-                return report?.name || "";
+                return { id: report?.id, reportName: report?.name } || "";
               })
             );
 
-            // Join names → "Finance, HR"
-            reportName = reports.filter(Boolean).join(",");
+            item.reportName = reports;
           }
-          item.reportName = reportName;
 
           item.appName = currentAppName;
 
@@ -829,21 +827,17 @@ class TaskStatusInfoService {
             const moduleIds = item.module_id.toString().split(",");
 
             // Fetch all module names using Promise.all
-            const modules = await Promise.all(
+            let modules = await Promise.all(
               moduleIds.map(async (id) => {
                 const mod = await Module.findOne({
                   where: { id },
                   raw: true,
                 });
-                return mod?.name || "";
+                return { id: mod?.id, moduleName: mod?.name } || "";
               })
             );
-
-            // Join names → "Finance, HR"
-            moduleName = modules.filter(Boolean).join(",");
+            item.moduleName = modules;
           }
-
-          item.moduleName = moduleName;
         }
       }
     }
