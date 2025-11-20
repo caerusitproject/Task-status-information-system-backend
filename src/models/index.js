@@ -11,7 +11,7 @@ dbInfo.Users = require("./User");
 dbInfo.Application = require("./Application");
 dbInfo.Module = require("./Module");
 dbInfo.ApplicationModule = require("./ApplicationModule");
-// dbInfo.TaskDetailApplicationMap = require("./taskDetailApplicationMap");
+dbInfo.Report = require("./Report");
 dbInfo.TicketingSystem = require("./ticketingSystem");
 dbInfo.TaskExecutionStatus = require("./taskExecutionStatus");
 dbInfo.TaskStatusAuditTrail = require("./taskStatusAuditTrail");
@@ -25,9 +25,7 @@ Object.entries(dbInfo).forEach(([key, value]) => {
   if (value && typeof value.init === "function") {
     console.log(`   ✅ ${key} -> Sequelize model class detected`);
   } else {
-    console.log(
-      `   ⚠️  ${key} -> Not a Sequelize model class or missing init()`
-    );
+    console.log(`${key} -> Not a Sequelize model class or missing init()`);
   }
 });
 
@@ -88,6 +86,18 @@ dbInfo.TaskDetail.belongsTo(dbInfo.TaskStatusInfo, {
   foreignKey: "tstatusId",
   as: "taskstatusinfo",
 });
+
+// First
+// dbInfo.TaskDetail.belongsTo(dbInfo.Report, {
+//   foreignKey: "report_id",
+//   as: "report",
+// });
+
+// // Then
+// dbInfo.Report.hasMany(dbInfo.TaskDetail, {
+//   foreignKey: "report_id",
+//   as: "taskDetails",
+// });
 
 // Task Status Info ↔ COLORS
 dbInfo.Colors.hasMany(dbInfo.TaskStatusInfo, {

@@ -28,14 +28,15 @@ app.use("/api/ticketingSystem", require("./routes/ticketingSystemRouter"));
 
 // IN USE
 app.use("/api/application", require("./routes/applicationRouter"));
+app.use("/api/report", require("./routes/reportRouter"));
 app.use("/api/module", require("./routes/moduleRouter"));
 app.use("/api/timeSheet", require("./routes/timesheetRouter"));
 
 //Report Generate
 //Weekly Report Get Call
 
-app.use("/api/reports/weekly", require("./routes/reportRouter"));
-app.post("/api/reports/pdf", reportController.taskPdf);
+// app.use("/api/reports/weekly", require("./routes/reportRouter"));
+// app.post("/api/reports/pdf", reportController.taskPdf);
 
 //app.use('/api/email/send', emailRoutes);
 

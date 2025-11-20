@@ -1,19 +1,22 @@
-const reportService = require('../services/reportService');
-const {generateWeeklySummaryPDF} = require('../util/pdfgenerator')
-const {getStartAndEndOfMonth} = require('../util/modifiers')
-const path = require("path");
-const fs = require("fs");
+const ReportService = require("../services/reportService");
+const { generateWeeklySummaryPDF } = require("../util/pdfgenerator");
+const { getStartAndEndOfMonth } = require("../util/modifiers");
+// const path = require("path");
+// const fs = require("fs");
 
-
-exports.taskExcel = async (req, res, next) => {
-  try {
-    const buffer = await reportService.generateTasksExcel();
-    res.setHeader('Content-Disposition', 'attachment; filename="tasks.xlsx"');
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.send(buffer);
-  } catch (err) { next(err); }
-};
-
+// exports.taskExcel = async (req, res, next) => {
+//   try {
+//     const buffer = await reportService.generateTasksExcel();
+//     res.setHeader("Content-Disposition", 'attachment; filename="tasks.xlsx"');
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+//     res.send(buffer);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 // exports.taskPdf = async (req, res, next) => {
 //   try {
@@ -31,7 +34,6 @@ exports.taskExcel = async (req, res, next) => {
 //     next(err);
 //   }
 // };
-
 
 // exports.taskPdf = async (req, res, next) => {
 //   try {
@@ -51,45 +53,78 @@ exports.taskExcel = async (req, res, next) => {
 //   } catch (err) { next(err); }
 // };
 
-
-
-exports.taskPdf = async (req, res, next) => {
+const createReport = async (req, res) => {
   try {
-    // Extract body params
-    const { year, month } = req.body;
-    const {startDate,endDate}= getStartAndEndOfMonth(year,month)
-
-    // 1️⃣ Fetch data
-    const weeklySummary = await reportService.getWeeklyStatusSummary(startDate,endDate);
-
-    // 2️⃣ Prepare the report data
-
-    console.log('path____________',weeklySummary)
-    
-    const reportData = {
-      startDate,
-      endDate,
-      weeklySummary,
-    };
-    if(weeklySummary && weeklySummary.length == 0 ){
-       res.status(403).json({message: "Pdf Cannot be generated", status: 403});
-    }
-    // 3️⃣ Define a valid file path
-    const filePath = path.join(__dirname, "../reports/Weekly_Task_Summary.pdf");
-    // Ensure folder exists
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-
-    // 4️⃣ Generate the PDF
-    await generateWeeklySummaryPDF(reportData, filePath);
-
-    // 5️⃣ Stream it to the response
-    res.setHeader("Content-Disposition", 'attachment; filename="Weekly_Task_Summary.pdf"');
-    res.setHeader("Content-Type", "application/pdf");
-
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    const newStatusInfo = await ReportService.createReportInfo(req.body);
+    res
+      .status(newStatusInfo.status)
+      .json({ message: newStatusInfo.message, status: newStatusInfo.status });
   } catch (err) {
-    console.error("Error generating PDF:", err);
-    next(err);
+    res.status(500).json({ message: err.message });
   }
 };
+
+const viewReport = async (req, res) => {
+  try {
+    const newStatusInfo = await ReportService.getReportInfo(req.query);
+    res.status(newStatusInfo.status).json({
+      count: newStatusInfo.totalRecords,
+      rows: newStatusInfo.rows,
+      totalPages: newStatusInfo.totalPages,
+      currentPage: newStatusInfo.currentPage,
+      nextPage: newStatusInfo.nextPage,
+      previousPage: newStatusInfo.previousPage,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// exports.taskPdf = async (req, res, next) => {
+//   try {
+//     // Extract body params
+//     // const { year, month } = req.body;
+//     // const { startDate, endDate } = getStartAndEndOfMonth(year, month);
+//      const { startDate, endDate } = req.query;
+//     // 1️⃣ Fetch data
+//     const weeklySummary = await reportService.getWeeklyStatusSummary(
+//       startDate,
+//       endDate
+//     );
+
+//     // 2️⃣ Prepare the report data
+
+//     console.log("path____________", weeklySummary);
+
+//     const reportData = {
+//       startDate,
+//       endDate,
+//       weeklySummary,
+//     };
+//     if (weeklySummary && weeklySummary.length == 0) {
+//       res.status(403).json({ message: "Pdf Cannot be generated", status: 403 });
+//     }
+//     // 3️⃣ Define a valid file path
+//     const filePath = path.join(__dirname, "../reports/Weekly_Task_Summary.pdf");
+//     // Ensure folder exists
+//     fs.mkdirSync(path.dirname(filePath), { recursive: true });
+
+//     // 4️⃣ Generate the PDF
+//     await generateWeeklySummaryPDF(reportData, filePath);
+
+//     // 5️⃣ Stream it to the response
+//     res.setHeader(
+//       "Content-Disposition",
+//       'attachment; filename="Weekly_Task_Summary.pdf"'
+//     );
+//     res.setHeader("Content-Type", "application/pdf");
+
+//     const fileStream = fs.createReadStream(filePath);
+//     fileStream.pipe(res);
+//   } catch (err) {
+//     console.error("Error generating PDF:", err);
+//     next(err);
+//   }
+// };
+
+module.exports = { createReport, viewReport };

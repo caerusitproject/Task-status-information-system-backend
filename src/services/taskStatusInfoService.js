@@ -5,6 +5,7 @@ const {
   Colors,
   TaskDetail,
   Module,
+  Report,
   TaskDetailApplicationMap,
   TaskDetailModuleMap,
   Role,
@@ -500,12 +501,17 @@ class TaskStatusInfoService {
 
         const appIds = [...new Set(moduleData.map((m) => m.app_id))].join(",");
         const moduleIds = moduleData.map((m) => m.module_id).join(",");
+        const reportIds =
+          payload.reportName &&
+          payload.reportName.length > 0 &&
+          payload.reportName.map((r_id) => r_id).join(",");
 
         // Update the single TaskDetail row
         await TaskDetail.update(
           {
             app_id: appIds,
             module_id: moduleIds,
+            report_id: reportIds,
           },
           {
             where: {
@@ -746,6 +752,7 @@ class TaskStatusInfoService {
             "sr_no",
             "app_id",
             "module_id",
+            "report_id",
             "created_at",
             "updated_at",
             "daily_accomplishment",
@@ -781,6 +788,8 @@ class TaskStatusInfoService {
           // APP NAME
           // ----------------------
           let currentAppName = "";
+          let reportName = "";
+          let moduleName = "";
 
           if (item.app_id) {
             const app = await Application.findOne({
@@ -791,12 +800,30 @@ class TaskStatusInfoService {
             currentAppName = app?.name || "";
           }
 
+          if (item.report_id) {
+            const reportIds = item.report_id.toString().split(",");
+
+            // Fetch all module names using Promise.all
+            const reports = await Promise.all(
+              reportIds.map(async (id) => {
+                const report = await Report.findOne({
+                  where: { id },
+                  raw: true,
+                });
+                return report?.name || "";
+              })
+            );
+
+            // Join names → "Finance, HR"
+            reportName = reports.filter(Boolean).join(",");
+          }
+          item.reportName = reportName;
+
           item.appName = currentAppName;
 
           // ----------------------
           // MODULE NAME (single or comma separated)
           // ----------------------
-          let moduleName = "";
 
           if (item.module_id) {
             const moduleIds = item.module_id.toString().split(",");
@@ -849,6 +876,7 @@ class TaskStatusInfoService {
           sr_no: detail.sr_no,
           appName: detail.appName || "",
           modulename: detail.moduleName || "",
+          reportName: detail.reportName || "",
           dailyAccomplishments: detail.daily_accomplishment,
           investigationRCA: detail.rca_investigation,
           resolutions: detail.resolution_and_steps,

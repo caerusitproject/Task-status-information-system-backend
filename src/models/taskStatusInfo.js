@@ -139,7 +139,7 @@ TaskStatusInfo.addHook("afterSync", async () => {
       console.log("✅ Default 'ticket_less' entry created.");
     } else {
       console.log(
-        "ℹ️ Default 'ticket_less' entry already exists. Skipping insert."
+        "Default 'ticket_less' entry already exists. Skipping insert."
       );
     }
   } catch (error) {

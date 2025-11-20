@@ -34,6 +34,10 @@ const TaskDetail = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    report_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     hour: {
       type: DataTypes.STRING,
       allowNull: true,
