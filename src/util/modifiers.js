@@ -155,9 +155,10 @@ exports.cleanSQL = (sql) => {
 };
 exports.generateTasksExcelFromReport = async (data) => {
   // Step 1 — Deduplicate CSV strings
+  {
+  }
   const cleanedData = data.map((item) => ({
     ...item,
-
     module_names: item.module_names
       ? [...new Set(item.module_names.split(",").map((s) => s.trim()))].join(
           ", "
@@ -169,6 +170,57 @@ exports.generateTasksExcelFromReport = async (data) => {
           ", "
         )
       : "",
+    daily_accomplishment: item.daily_accomplishment
+      ? (() => {
+          const html = item.daily_accomplishment;
+
+          // 1️⃣ Extract plain text inside <p> tags
+          const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
+            .map((m) => m[1].trim())
+            .filter((t) => t && t !== "&nbsp;" && t !== "");
+          // 2️⃣ Extract queries using your existing function
+          const queries =
+            this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+          // 3️⃣ Merge both results
+          return [...pTags, ...queries].join("\n");
+        })()
+      : "",
+
+    resolution_and_steps: item.resolution_and_steps
+      ? (() => {
+          const html = item.resolution_and_steps;
+
+          // 1️⃣ Extract plain text inside <p> tags
+          const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
+            .map((m) => m[1].trim())
+            .filter((t) => t && t !== "&nbsp;" && t !== "");
+          // 2️⃣ Extract queries using your existing function
+          const queries =
+            this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+          console.log("let it burn__", item.rca_investigation);
+          // 3️⃣ Merge both results
+          return [...pTags, ...queries].join("\n");
+        })()
+      : "",
+    rca_investigation: item.rca_investigation
+      ? (() => {
+          const html = item.rca_investigation;
+
+          // 1️⃣ Extract plain text inside <p> tags
+          const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)].map((m) =>
+            m[1].trim()
+          );
+          // .filter((t) => t && t !== "&nbsp;" && t !== "");
+          // 2️⃣ Extract queries using your existing function
+          const queries =
+            this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+          // 3️⃣ Merge both results
+          return [...pTags, ...queries].join("\n");
+        })()
+      : "",
   }));
 
   // Step 2 — Create Excel
@@ -176,17 +228,17 @@ exports.generateTasksExcelFromReport = async (data) => {
   const ws = wb.addWorksheet("Task Report");
 
   ws.columns = [
-    { header: "TStatus ID", key: "tstatus_id", width: 12 },
+    // { header: "TStatus ID", key: "tstatus_id", width: 12 },
+    { header: "Task ID", key: "task_id", width: 20 },
     { header: "Application ID", key: "app_id", width: 15 },
     { header: "Application Name", key: "application_name", width: 20 },
 
-    { header: "Module IDs", key: "module_id", width: 20 },
+    // { header: "Module IDs", key: "module_id", width: 20 },
     { header: "Module Names", key: "module_names", width: 35 },
 
     { header: "SR No", key: "sr_no", width: 15 },
-    { header: "Task ID", key: "task_id", width: 20 },
 
-    { header: "Report IDs", key: "report_id", width: 20 },
+    // { header: "Report IDs", key: "report_id", width: 20 },
     { header: "Report Names", key: "report_names", width: 35 },
 
     { header: "Hour", key: "hour", width: 10 },
@@ -196,12 +248,14 @@ exports.generateTasksExcelFromReport = async (data) => {
 
     { header: "Daily Accomplishment", key: "daily_accomplishment", width: 40 },
     { header: "RCA Investigation", key: "rca_investigation", width: 40 },
-    { header: "Resolution Steps", key: "resolution_and_steps", width: 40 },
+    { header: "Resolution and Steps", key: "resolution_and_steps", width: 40 },
 
     { header: "Created At", key: "created_at", width: 25 },
     { header: "Updated At", key: "updated_at", width: 25 },
   ];
-
+  ws.getRow(1).eachCell((cell) => {
+    cell.font = { bold: true };
+  });
   // Step 3 — Add rows
   cleanedData.forEach((item) => {
     ws.addRow({
@@ -223,8 +277,8 @@ exports.generateTasksExcelFromReport = async (data) => {
       task_type: item.task_type,
 
       daily_accomplishment: item.daily_accomplishment || "",
-      rca_investigation: item.rca_investigation || "",
       resolution_and_steps: item.resolution_and_steps || "",
+      rca_investigation: item.rca_investigation || "",
 
       created_at: item.created_at
         ? new Date(item.created_at).toLocaleString()

@@ -466,7 +466,7 @@ class TaskStatusInfoService {
         },
         {
           where: {
-            id: findTaskDetailId.id,
+            // id: findTaskDetailId.id,
             task_code: payload.taskId.toString(),
           },
         }
