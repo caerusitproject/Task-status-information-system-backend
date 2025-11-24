@@ -6,6 +6,7 @@ const {
   TaskDetail,
   Module,
   Report,
+  Clients,
   TaskDetailApplicationMap,
   TaskDetailModuleMap,
   Role,
@@ -442,6 +443,8 @@ class TaskStatusInfoService {
   static async updateEachTaskWeek(params, payload) {
     try {
       const { taskDetailId } = params;
+      // const userId = req.user.id;          // from JWT
+      const clientId = payload.clientId;
       // const nextDate = new Date(payload.updatedDate);
       // nextDate.setDate(nextDate.getDate() + 1);
 
@@ -506,12 +509,15 @@ class TaskStatusInfoService {
           payload.reportName.length > 0 &&
           payload.reportName.map((r_id) => r_id).join(",");
 
+        const clientId = payload.clientId?.map((c_id) => c_id).join(",");
+
         // Update the single TaskDetail row
         await TaskDetail.update(
           {
             app_id: appIds,
             module_id: moduleIds,
             report_id: reportIds,
+            client_id: clientId,
           },
           {
             where: {
@@ -753,6 +759,7 @@ class TaskStatusInfoService {
             "app_id",
             "module_id",
             "report_id",
+            "client_id",
             "created_at",
             "updated_at",
             "daily_accomplishment",
@@ -801,7 +808,8 @@ class TaskStatusInfoService {
           }
 
           if (item.report_id) {
-            const reportIds = item.report_id.toString().split(",");
+            console.log("report_id", item.report_id);
+            const reportIds = item.report_id?.toString().split(",");
 
             // Fetch all module names using Promise.all
             let reports = await Promise.all(
@@ -838,6 +846,22 @@ class TaskStatusInfoService {
             );
             item.moduleName = modules;
           }
+
+          if (item.client_id) {
+            const clientIds = item.client_id?.toString().split(",");
+
+            // Fetch all module names using Promise.all
+            let clients = await Promise.all(
+              clientIds.map(async (id) => {
+                const cli = await Clients.findOne({
+                  where: { id },
+                  raw: true,
+                });
+                return { id: cli?.id, clientName: cli?.name } || "";
+              })
+            );
+            item.clientName = clients;
+          }
         }
       }
     }
@@ -871,6 +895,7 @@ class TaskStatusInfoService {
           appName: detail.appName || "",
           modulename: detail.moduleName || "",
           reportName: detail.reportName || "",
+          clientName: detail.clientName || "",
           dailyAccomplishments: detail.daily_accomplishment,
           investigationRCA: detail.rca_investigation,
           resolutions: detail.resolution_and_steps,

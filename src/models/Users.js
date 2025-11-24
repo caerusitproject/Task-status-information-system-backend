@@ -1,8 +1,8 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../../config/db");
 
-const User = sequelize.define(
-  "user",
+const Users = sequelize.define(
+  "user_info",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -17,10 +17,10 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    auth_key: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
+    // auth_key: {
+    //   type: DataTypes.TEXT,
+    //   allowNull: true,
+    // },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -41,11 +41,11 @@ const User = sequelize.define(
     },
   },
   {
-    tableName: "user",
+    tableName: "user_info",
     timestamps: false,
     underscored: true,
     freezeTableName: true,
   }
 );
 
-module.exports = User;
+module.exports = Users;

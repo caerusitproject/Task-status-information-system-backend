@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const TaskController = require("../controllers/taskController");
-// const { authenticate, authorizeRoles } = require("../middleware/authEmpMiddleware");
+const { authenticate, authorizeRoles } = require("../middlewares/auth");
 const TaskStatusInfo = require("../services/taskStatusInfoService");
 
 router.get("/dates/:currentDate/:page", async (req, res, next) => {
@@ -19,8 +19,10 @@ router.get("/dates/:currentDate/:page", async (req, res, next) => {
   }
 });
 
-router.post("/create/:taskType", async (req, res, next) => {
+router.post("/create/:taskType", authenticate, async (req, res, next) => {
   try {
+    const userId = req.user.user_id;
+    console.log("userId___", userId);
     const newStatusInfo = await TaskStatusInfo.createTimeSheetStatusInfo(
       req.params,
       req.body

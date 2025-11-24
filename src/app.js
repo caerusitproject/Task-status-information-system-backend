@@ -30,6 +30,8 @@ app.use("/api/ticketingSystem", require("./routes/ticketingSystemRouter"));
 app.use("/api/application", require("./routes/applicationRouter"));
 app.use("/api/report", require("./routes/reportRouter"));
 app.use("/api/module", require("./routes/moduleRouter"));
+app.use("/api/client", require("./routes/clientRouter"));
+app.use("/api/users", require("./routes/usersRouter"));
 app.use("/api/timeSheet", require("./routes/timesheetRouter"));
 
 //Report Generate

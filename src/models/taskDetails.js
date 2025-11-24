@@ -26,6 +26,22 @@ const TaskDetail = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "user_info",
+        key: "id",
+      },
+    },
+    client_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      // references: {
+      //   model: "clients_info",
+      //   key: "id",
+      // },
+    },
     sr_no: {
       type: DataTypes.STRING,
       allowNull: true,

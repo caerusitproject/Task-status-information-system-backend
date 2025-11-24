@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { Application, ApplicationModule, Module } = require("../models");
+const { Clients } = require("../models");
 const { raw } = require("body-parser");
 const { where } = require("sequelize");
 require("dotenv").config();
@@ -8,63 +8,59 @@ require("dotenv").config();
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 // const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "refreshsecretkey";
 
-class ApplicationInfoService {
-  // 🔹 Create Application Status Info
-  static async createApplicationInfo(data) {
-    const { applicationName, applicationDescription, modules } = data;
+class ClientInfoService {
+  // 🔹 Create Client Status Info
+  static async createClientInfo(data) {
+    const { name, description } = data;
 
     // Validate required fields
-    if (!applicationName) {
+    if (!name) {
       return { message: "Invalid data provided", status: 400 };
     }
 
     try {
-      // 1️⃣ Create the Application
-      const applicationInfo = await Application.create({
-        name: applicationName,
-        description: applicationDescription,
+      // 1️⃣ Create the Client
+      const clientInfo = await Clients.create({
+        name: name,
+        description: description,
       });
 
-      // 2️⃣ If module IDs exist, create mapping
-      if (Array.isArray(modules) && modules.length > 0) {
-        const moduleData = modules.map((moduleId) => ({
-          app_id: applicationInfo.id,
-          module_id: moduleId,
-        }));
+      //   // 2️⃣ If module IDs exist, create mapping
+      //   if (Array.isArray(modules) && modules.length > 0) {
+      //     const moduleData = modules.map((moduleId) => ({
+      //       app_id: applicationInfo.id,
+      //       module_id: moduleId,
+      //     }));
 
-        await ApplicationModule.bulkCreate(moduleData);
-      }
+      //     await ApplicationModule.bulkCreate(moduleData);
+      //   }
 
       return {
-        message: "Application created successfully with modules",
+        message: "Client created successfully",
         status: 200,
-        applicationId: applicationInfo.id,
       };
     } catch (err) {
-      console.error("Error creating application info:", err);
+      console.error("Error creating clients info:", err);
       return { message: "Internal server error", status: 500 };
     }
   }
 
-  //     return { accessToken, refreshToken };
-  //   }
+  // 🔹 Get Client Status Info
 
-  // 🔹 Get Application Status Info
-
-  static async getApplicationInfo(data = {}) {
+  static async getClientInfo(data = {}) {
     try {
       const page = data.page ? parseInt(data.page, 10) : null;
       const pageSize = data.pagesize ? parseInt(data.pagesize, 10) : null;
 
       const options = {
         order: [["id", "ASC"]],
-        include: [
-          {
-            model: Module,
-            as: "module", // alias from your association
-            attributes: ["id", "name"],
-          },
-        ],
+        // include: [
+        //   {
+        //     model: Module,
+        //     as: "module", // alias from your association
+        //     attributes: ["id", "name"],
+        //   },
+        // ],
       };
 
       // Apply pagination only if both are provided
@@ -73,11 +69,10 @@ class ApplicationInfoService {
         options.offset = (page - 1) * pageSize;
       }
 
-      const result = await Application.findAndCountAll(options);
-
-      // if (!result.rows || result.rows.length === 0) {
-      //   return { message: "No applications found", status: 403 };
-      // }
+      const result = await Clients.findAndCountAll(options);
+      if (!result.rows || result.rows.length === 0) {
+        return { message: "No clients found", status: 403 };
+      }
 
       // If no pagination requested → return all data
       if (!page || !pageSize) {
@@ -103,54 +98,54 @@ class ApplicationInfoService {
         rows: result.rows,
       };
     } catch (error) {
-      console.error("Error fetching Application Info:", error);
+      console.error("Error fetching Client Info:", error);
       return { message: "Internal Server Error", status: 500 };
     }
   }
-  static async editApplicationInfo(data, body) {
+  static async editClientInfo(data, body) {
     try {
-      const { appId } = data;
+      const { clientId } = data;
 
-      if (!appId) {
-        return { message: "Application ID not found", status: 403 };
+      if (!clientId) {
+        return { message: "Client ID not found", status: 403 };
       }
 
-      const application = await Application.findByPk(appId);
+      const client = await Clients.findByPk(clientId);
 
-      if (!application) {
-        return { message: "Application not found!", status: 404 };
+      if (!client) {
+        return { message: "Client not found!", status: 404 };
       }
 
       // Validate body
-      const { applicationName, applicationDescription, modules } = body;
+      const { name, description } = body;
 
-      if (!applicationName || !applicationDescription) {
+      if (!name || !description) {
         return { message: "Invalid data provided", status: 400 };
       }
 
       // ---------- UPDATE ONLY BASIC DETAILS ----------
-      await Application.update(
+      await Clients.update(
         {
-          name: applicationName,
-          description: applicationDescription,
+          name: name,
+          description: description,
         },
-        { where: { id: appId } }
+        { where: { id: clientId } }
       );
 
       // ---------- UPDATE MODULE MAPPINGS ----------
-      if (Array.isArray(modules)) {
-        // fetch module rows
-        const moduleRows = await Module.findAll({
-          where: { id: modules },
-        });
+      //   if (Array.isArray(modules)) {
+      //     // fetch module rows
+      //     const moduleRows = await Module.findAll({
+      //       where: { id: modules },
+      //     });
 
-        await application.setModule(moduleRows);
-        // (because alias is `module`)
-      }
+      //     await client.setModule(moduleRows);
+      //     // (because alias is `module`)
+      //   }
 
-      return { message: "Application updated successfully", status: 200 };
+      return { message: "Client updated successfully", status: 200 };
     } catch (error) {
-      console.error("Error updating Application:", error);
+      console.error("Error updating Client:", error);
       return { message: "Internal Server Error", status: 500 };
     }
   }
@@ -239,4 +234,4 @@ class ApplicationInfoService {
   // }
 }
 
-module.exports = ApplicationInfoService;
+module.exports = ClientInfoService;

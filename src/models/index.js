@@ -7,7 +7,9 @@ const sequelize = require("../../config/db");
 const dbInfo = {};
 
 // ✅ Import all models
-dbInfo.Users = require("./User");
+dbInfo.Users = require("./Users");
+dbInfo.Clients = require("./Clients");
+// dbInfo.UserClientMap = require("./UserClientMap");
 dbInfo.Application = require("./Application");
 dbInfo.Module = require("./Module");
 dbInfo.ApplicationModule = require("./ApplicationModule");
@@ -120,6 +122,29 @@ dbInfo.Module.belongsTo(dbInfo.Application, {
   foreignKey: "app_id",
   as: "applications",
 });
+
+// USER CLIENT MAP ASSOCIATIONS
+// dbInfo.Users.belongsToMany(dbInfo.Clients, {
+//   through: dbInfo.UserClientMap,
+//   foreignKey: "user_id",
+//   otherKey: "client_id",
+//   as: "clients",
+// });
+
+// dbInfo.Clients.belongsToMany(dbInfo.Users, {
+//   through: dbInfo.UserClientMap,
+//   foreignKey: "client_id",
+//   otherKey: "user_id",
+//   as: "users",
+// });
+
+// dbInfo.UserClientMap.belongsTo(dbInfo.Users, { foreignKey: "user_id" });
+// dbInfo.UserClientMap.belongsTo(dbInfo.Clients, { foreignKey: "client_id" });
+
+// dbInfo.Users.hasMany(dbInfo.UserClientMap, { foreignKey: "user_id" });
+// dbInfo.Clients.hasMany(dbInfo.UserClientMap, { foreignKey: "client_id" });
+
+// TASK DETAIL ↔ APPLICATION
 
 // dbInfo.TaskDetail.belongsTo(dbInfo.Application, {
 //   foreignKey: "app_id",
