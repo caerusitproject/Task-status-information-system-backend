@@ -19,22 +19,27 @@ router.get("/dates/:currentDate/:page", async (req, res, next) => {
   }
 });
 
-router.post("/create/:taskType", authenticate, async (req, res, next) => {
-  try {
-    const userId = req.user.user_id;
-    console.log("userId___", userId);
-    const newStatusInfo = await TaskStatusInfo.createTimeSheetStatusInfo(
-      req.params,
-      req.body
-    );
-    res.status(newStatusInfo.status).json({
-      message: newStatusInfo.message,
-      status: newStatusInfo.status,
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+router.post(
+  "/create/:taskType",
+  //  authenticate,
+  async (req, res, next) => {
+    try {
+      const user_info = req.user;
+      console.log("userId___", user_info);
+      const newStatusInfo = await TaskStatusInfo.createTimeSheetStatusInfo(
+        req.params,
+        req.body,
+        user_info
+      );
+      res.status(newStatusInfo.status).json({
+        message: newStatusInfo.message,
+        status: newStatusInfo.status,
+      });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
   }
-});
+);
 
 router.get("/viewbyId/:taskId", async (req, res, next) => {
   try {
@@ -90,14 +95,27 @@ router.get("/color-pallette", async (req, res, next) => {
   }
 });
 
-router.post("/create-task-details/:taskId", TaskController.createTaskDetail);
+router.post(
+  "/create-task-details/:taskId",
+  // authenticate,
+  TaskController.createTaskDetail
+);
 
-router.get("/weekly-summary-view", TaskController.getWeeklySummary);
+router.get(
+  "/weekly-summary-view",
+  // authenticate,
+  TaskController.getWeeklySummary
+);
 
-router.get("/getquery-suggestions", TaskController.fetchSuggestions);
+router.get(
+  "/getquery-suggestions",
+  // authenticate,
+  TaskController.fetchSuggestions
+);
 
 router.put(
   "/edit-each-task-details/:taskDetailId",
+  // authenticate,
   TaskController.editEachTaskSheetDetail
 );
 

@@ -14,21 +14,19 @@ const createUser = async (req, res) => {
   }
 };
 
-// const viewUser = async (req, res) => {
-//   try {
-//     const newStatusInfo = await ClientInfoService.getClientInfo(req.query);
-//     res.status(newStatusInfo.status).json({
-//       count: newStatusInfo.totalRecords,
-//       rows: newStatusInfo.rows,
-//       totalPages: newStatusInfo.totalPages,
-//       currentPage: newStatusInfo.currentPage,
-//       nextPage: newStatusInfo.nextPage,
-//       previousPage: newStatusInfo.previousPage,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
+const loginUser = async (req, res) => {
+  try {
+    const newStatusInfo = await UserInfoService.loginUsers(req.body);
+    res.status(newStatusInfo.status).json({
+      token: newStatusInfo.token,
+      message: newStatusInfo.message,
+      status: newStatusInfo.status,
+      user: newStatusInfo.user,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 // const editUser = async (req, res) => {
 //   try {
@@ -45,4 +43,4 @@ const createUser = async (req, res) => {
 //   }
 // };
 
-module.exports = { createUser };
+module.exports = { createUser, loginUser };

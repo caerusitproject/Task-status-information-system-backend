@@ -77,8 +77,10 @@ const createTaskDetail = async (req, res) => {
   try {
     const { taskId } = req.params;
     const payload = req.body;
+    const user_info = req.user;
+    console.log("create_task_detail___", user_info);
 
-    const result = await createTaskDetailEntry(taskId, payload);
+    const result = await createTaskDetailEntry(taskId, payload, user_info);
 
     res.status(result.status).json({
       message: result.message,
@@ -109,14 +111,14 @@ const createTaskDetail = async (req, res) => {
 const getWeeklySummary = async (req, res) => {
   try {
     const { startDate, endDate } = req.query; // e.g., ?startDate=2025-11-05&endDate=2025-11-10
-
+    const user_info = req.user;
     if (!startDate || !endDate) {
       return res
         .status(400)
         .json({ message: "startDate and endDate required" });
     }
 
-    const data = await getWeeklyTasks(startDate, endDate);
+    const data = await getWeeklyTasks(startDate, endDate, user_info);
 
     res.status(200).json(data);
   } catch (error) {
@@ -127,13 +129,13 @@ const getWeeklySummary = async (req, res) => {
 
 const editEachTaskSheetDetail = async (req, res) => {
   try {
-    // const { updatedDate } = req.params;
+    const user_info = req.user;
 
     // if (!updatedDate) {
     //   return res.status(400).json({ message: "Updated Date required" });
     // }
 
-    const result = await updateEachTaskWeek(req.params, req.body);
+    const result = await updateEachTaskWeek(req.params, req.body, user_info);
 
     console.log("result__", result);
 
@@ -153,7 +155,7 @@ const fetchSuggestions = async (req, res) => {
     // e.g., ?startDate=2025-11-05&endDate=2025-11-10
 
     const { query } = req.query;
-
+    const user_info = req.user;
     // if (!taskId) {
     //   return res.status(400).json({ message: "Task Id required!" });
     // }
@@ -162,7 +164,7 @@ const fetchSuggestions = async (req, res) => {
       return res.status(400).json({ message: "Query is required!" });
     }
 
-    const data = await fetchQuerySuggestion(query);
+    const data = await fetchQuerySuggestion(query, user_info);
 
     res.status(200).json(data);
   } catch (error) {

@@ -30,7 +30,7 @@ require("dotenv").config();
 
 class TaskStatusInfoService {
   // 🔹 Create Ticket Status Info
-  static async createTimeSheetStatusInfo(params, data) {
+  static async createTimeSheetStatusInfo(params, data, user_info) {
     const { taskType } = params;
     const {
       requested_by,
@@ -41,6 +41,7 @@ class TaskStatusInfoService {
       reported_by,
       statement_of_the_issue,
       sr_no,
+      client_id,
     } = data;
     try {
       console.log("hold on ___", taskType);
@@ -62,11 +63,16 @@ class TaskStatusInfoService {
           !data.description ||
           !data.status ||
           !data.ticket_id ||
-          !data.color_row
+          !data.color_row ||
+          !data.client_id
         ) {
           return { message: "Invalid data provided", status: 400 };
         }
         const color = await Colors.findOne({ where: { code: color_row } });
+        const clientIdString = Array.isArray(client_id)
+          ? client_id.join(",")
+          : client_id?.toString() || "";
+
         const taskStatusInfo = await TaskStatusInfo.create({
           requestedBy: requested_by ? requested_by : "",
           task_type: taskType ? taskType : "",
@@ -77,6 +83,8 @@ class TaskStatusInfoService {
           color_id: color.id,
           reportedBy: "",
           statement_of_the_issue: "",
+          // user_id: user_info.id,
+          client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
         return {
@@ -99,11 +107,15 @@ class TaskStatusInfoService {
           !data.statement_of_the_issue ||
           !data.status ||
           !data.ticket_id ||
-          !data.color_row
+          !data.color_row ||
+          !data.client_id
         ) {
           return { message: "Invalid data provided", status: 400 };
         }
         const color = await Colors.findOne({ where: { code: color_row } });
+        const clientIdString = Array.isArray(client_id)
+          ? client_id.join(",")
+          : client_id?.toString() || "";
         const taskStatusInfo = await TaskStatusInfo.create({
           reportedBy: reported_by ? reported_by : "",
           task_type: taskType ? taskType : "",
@@ -117,6 +129,8 @@ class TaskStatusInfoService {
           color_id: color.id,
           requestedBy: "",
           description: "",
+          // user_id: user_info.id,
+          client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
         return {
@@ -129,11 +143,15 @@ class TaskStatusInfoService {
           !data.description ||
           !data.status ||
           !data.ticket_id ||
-          !data.color_row
+          !data.color_row ||
+          !data.client_id
         ) {
           return { message: "Invalid data provided", status: 400 };
         }
         const color = await Colors.findOne({ where: { code: color_row } });
+        const clientIdString = Array.isArray(client_id)
+          ? client_id.join(",")
+          : client_id?.toString() || "";
         const taskStatusInfo = await TaskStatusInfo.create({
           requestedBy: requested_by ? requested_by : "",
           task_type: taskType ? taskType : "",
@@ -144,6 +162,8 @@ class TaskStatusInfoService {
           color_id: color.id,
           reportedBy: "",
           statement_of_the_issue: "",
+          // user_id: user_info.id,
+          client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
         return {
@@ -440,7 +460,7 @@ class TaskStatusInfoService {
     }
   }
 
-  static async updateEachTaskWeek(params, payload) {
+  static async updateEachTaskWeek(params, payload, user_info) {
     try {
       const { taskDetailId } = params;
       // const userId = req.user.id;          // from JWT
@@ -466,6 +486,7 @@ class TaskStatusInfoService {
       const updateStatus = await TaskStatusInfo.update(
         {
           status: payload.status,
+          // user_id: user_info.id,
         },
         {
           where: {
@@ -487,6 +508,7 @@ class TaskStatusInfoService {
           where: {
             id: findTaskDetailId.id,
             task_id: payload.taskId.toString(),
+            // user_id: user_info.id,
           },
         }
       );
@@ -509,7 +531,7 @@ class TaskStatusInfoService {
           payload.reportName.length > 0 &&
           payload.reportName.map((r_id) => r_id).join(",");
 
-        const clientId = payload.clientId?.map((c_id) => c_id).join(",");
+        // const clientId = payload.clientId?.map((c_id) => c_id).join(",");
 
         // Update the single TaskDetail row
         await TaskDetail.update(
@@ -517,11 +539,12 @@ class TaskStatusInfoService {
             app_id: appIds,
             module_id: moduleIds,
             report_id: reportIds,
-            client_id: clientId,
+            // client_id: clientId,
           },
           {
             where: {
               id: findTaskDetailId.id,
+              // user_id: user_info.id,
               task_id: payload.taskId.toString(),
             },
           }
@@ -554,7 +577,7 @@ class TaskStatusInfoService {
     }
   }
 
-  static createTaskDetailEntry = async (taskId, payload) => {
+  static createTaskDetailEntry = async (taskId, payload, user_info) => {
     try {
       const task = await TaskStatusInfo.findOne({
         where: { task_code: taskId.toString() },
@@ -569,6 +592,7 @@ class TaskStatusInfoService {
         task_type: task.task_type,
         hour: payload.hour,
         minute: payload.minute,
+        // user_id: user_info.id,
       };
       switch (task.task_type) {
         case "assignment":
@@ -682,7 +706,7 @@ class TaskStatusInfoService {
   //   }
   // };
 
-  static fetchQuerySuggestion = async (Query) => {
+  static fetchQuerySuggestion = async (Query, user_info) => {
     try {
       // const TaskId = taskId.trim();
       const query = Query.trim();
@@ -694,6 +718,7 @@ class TaskStatusInfoService {
       // Step 1: fetch rows which contain HTML text
       const results = await TaskDetail.findAll({
         where: {
+          // user_id: user_info.id,
           // task_id: TaskId,
           [Op.or]: [
             { daily_accomplishment: { [Op.iLike]: `%${query}%` } },
@@ -739,7 +764,7 @@ class TaskStatusInfoService {
     }
   };
 
-  static getWeeklyTasks = async (startDate, endDate) => {
+  static getWeeklyTasks = async (startDate, endDate, user_info) => {
     const start = new Date(startDate);
     const end = new Date(getNextDate(endDate ? endDate : ""));
     const tasks = await TaskStatusInfo.findAll({
@@ -749,6 +774,7 @@ class TaskStatusInfoService {
           as: "taskstaskdetails",
           required: true, // only include tasks having details
           where: {
+            // user_id: user_info.id,
             created_at: { [Op.between]: [start, end] },
           },
           attributes: [
@@ -759,7 +785,6 @@ class TaskStatusInfoService {
             "app_id",
             "module_id",
             "report_id",
-            "client_id",
             "created_at",
             "updated_at",
             "daily_accomplishment",
@@ -777,6 +802,7 @@ class TaskStatusInfoService {
         // "id",
         "ticket_id",
         "task_code",
+        "client_id",
         "task_type",
         "status",
         "created_at",
@@ -847,8 +873,8 @@ class TaskStatusInfoService {
             item.moduleName = modules;
           }
 
-          if (item.client_id) {
-            const clientIds = item.client_id?.toString().split(",");
+          if (ele.client_id) {
+            const clientIds = ele.client_id?.toString().split(",");
 
             // Fetch all module names using Promise.all
             let clients = await Promise.all(

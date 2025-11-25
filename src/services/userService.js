@@ -18,33 +18,27 @@ class UserInfoService {
       return { message: "Invalid data provided", status: 400 };
     }
 
+    const existingUser = await Users.findOne({
+      where: { email_id: emailId },
+    });
+
+    if (existingUser) {
+      return { message: "Email already exists", status: 409 };
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-      // 1️⃣ Create user in DB
+      // Create JWT Payload
       const user = await Users.create({
         email_id: emailId,
         password: hashedPassword,
         role: "USER",
       });
 
-      // 2️⃣ Create JWT Payload
-      const payload = {
-        sub: user.id, // user_id (your middleware expects "sub")
-        email: user.email_id,
-        role: user.role,
-      };
-
-      // 3️⃣ Sign JWT token
-      const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
-
-      // 4️⃣ Return success + token
       return {
         message: "User registered successfully",
         status: 200,
-        token, // ← send token to frontend
         user: {
           id: user.id,
           email: user.email_id,
@@ -53,6 +47,48 @@ class UserInfoService {
       };
     } catch (err) {
       console.error("Error creating user:", err);
+      return { message: "Internal server error", status: 500 };
+    }
+  }
+  static async loginUsers(data) {
+    const { emailId, password } = data;
+    // Validate required fields
+    if (!emailId || !password) {
+      return { message: "Invalid data provided", status: 400 };
+    }
+    try {
+      const user = await Users.findOne({ where: { email_id: emailId } });
+      if (!user) {
+        return { message: "Invalid email or password", status: 401 };
+      }
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
+        return { message: "Invalid email or password", status: 401 };
+      }
+      // Create JWT Payload
+      const payload = {
+        sub: user.id,
+        email: user.email_id,
+        role: user.role,
+      };
+
+      // Sign JWT token
+      const token = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+      });
+      // Return success + token
+      return {
+        message: "Login successful",
+        status: 200,
+        token,
+        user: {
+          id: user.id,
+          email: user.email_id,
+          role: user.role,
+        },
+      };
+    } catch (err) {
+      console.error("Error during login:", err);
       return { message: "Internal server error", status: 500 };
     }
   }

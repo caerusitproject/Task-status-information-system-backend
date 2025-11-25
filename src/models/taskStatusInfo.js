@@ -9,6 +9,22 @@ const TaskStatusInfo = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "user_info",
+        key: "id",
+      },
+    },
+    client_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      // references: {
+      //   model: "clients_info",
+      //   key: "id",
+      // },
+    },
     task_code: {
       type: DataTypes.STRING,
     },
