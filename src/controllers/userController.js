@@ -28,6 +28,18 @@ const loginUser = async (req, res) => {
   }
 };
 
+const logoutUser = async (req, res) => {
+  try {
+    const newStatusInfo = await UserInfoService.logoutUsers(req.body);
+    res.status(newStatusInfo.status).json({
+      message: newStatusInfo.message,
+      status: newStatusInfo.status,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // const editUser = async (req, res) => {
 //   try {
 //     const newStatusInfo = await ClientInfoService.editClientInfo(
@@ -43,4 +55,4 @@ const loginUser = async (req, res) => {
 //   }
 // };
 
-module.exports = { createUser, loginUser };
+module.exports = { createUser, loginUser, logoutUser };

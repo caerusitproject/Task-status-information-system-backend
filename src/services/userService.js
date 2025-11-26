@@ -72,6 +72,11 @@ class UserInfoService {
         role: user.role,
       };
 
+      const updateActivate = await Users.update(
+        { is_Active: "true" },
+        { where: { id: user.id } }
+      );
+
       // Sign JWT token
       const token = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN || "1d",
@@ -89,6 +94,31 @@ class UserInfoService {
       };
     } catch (err) {
       console.error("Error during login:", err);
+      return { message: "Internal server error", status: 500 };
+    }
+  }
+
+  static async logoutUsers(data) {
+    const { emailId } = data;
+    // Validate required fields
+    if (!emailId) {
+      return { message: "Invalid data provided", status: 400 };
+    }
+    try {
+      const user = await Users.findOne({ where: { email_id: emailId } });
+      if (!user) {
+        return { message: "Invalid email", status: 401 };
+      }
+      const updateDeactivate = await Users.update(
+        { is_Active: "false" },
+        { where: { id: user.id } }
+      );
+      return {
+        message: "Logout successful",
+        status: 200,
+      };
+    } catch (err) {
+      console.error("Error during logout:", err);
       return { message: "Internal server error", status: 500 };
     }
   }

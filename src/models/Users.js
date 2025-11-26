@@ -17,6 +17,11 @@ const Users = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    is_Active: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "false",
+    },
     // auth_key: {
     //   type: DataTypes.TEXT,
     //   allowNull: true,

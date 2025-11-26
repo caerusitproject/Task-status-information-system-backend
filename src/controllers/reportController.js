@@ -1,6 +1,9 @@
 const ReportService = require("../services/reportService");
 const { generateWeeklySummaryPDF } = require("../util/pdfgenerator");
-const { generateTasksExcelFromReport } = require("../util/modifiers");
+const {
+  generateTasksExcelFromReport,
+  generateTasksPDFFromReport,
+} = require("../util/modifiers");
 // const path = require("path");
 // const fs = require("fs");
 
@@ -80,7 +83,7 @@ const viewReport = async (req, res) => {
   }
 };
 
-const createPdfTimeSheetReport = async (req, res) => {
+const createExcelTimeSheetReport = async (req, res) => {
   // try {
   //   const newStatusInfo = await ReportService.getTimeSheetDetails(
   //     req.body.startDate,
@@ -115,6 +118,26 @@ const createPdfTimeSheetReport = async (req, res) => {
 
     // Send buffer directly
     res.status(200).send(excelBuffer);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const createPDFTimeSheetReport = async (req, res) => {
+  try {
+    const newStatusInfo = await ReportService.getTimeSheetDetails(
+      req.body.startDate,
+      req.body.endDate
+    );
+
+    // ✅ Generate PDF buffer
+    const pdfBuffer = await generateTasksPDFFromReport(newStatusInfo);
+
+    // ✅ Send as downloadable PDF
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=timesheet.pdf");
+
+    res.status(200).send(pdfBuffer);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -167,4 +190,9 @@ const createPdfTimeSheetReport = async (req, res) => {
 //   }
 // };
 
-module.exports = { createReport, viewReport, createPdfTimeSheetReport };
+module.exports = {
+  createReport,
+  viewReport,
+  createExcelTimeSheetReport,
+  createPDFTimeSheetReport,
+};

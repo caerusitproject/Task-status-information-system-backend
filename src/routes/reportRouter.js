@@ -9,6 +9,11 @@ router.post("/create", ReportController.createReport);
 
 router.get("/view", ReportController.viewReport);
 
-router.post("/generatePDFreport", ReportController.createPdfTimeSheetReport);
+router.post(
+  "/generateExcelReport",
+  ReportController.createExcelTimeSheetReport
+);
+
+router.post("/generatePDFReport", ReportController.createPDFTimeSheetReport);
 
 module.exports = router;

@@ -34,14 +34,14 @@ const TaskDetail = sequelize.define(
         key: "id",
       },
     },
-    // client_id: {
-    //   type: DataTypes.STRING,
-    //   allowNull: true,
-    //   // references: {
-    //   //   model: "clients_info",
-    //   //   key: "id",
-    //   // },
-    // },
+    client_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      // references: {
+      //   model: "clients_info",
+      //   key: "id",
+      // },
+    },
     sr_no: {
       type: DataTypes.STRING,
       allowNull: true,

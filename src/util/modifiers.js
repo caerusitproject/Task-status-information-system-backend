@@ -1,4 +1,5 @@
 const ExcelJS = require("exceljs");
+const PDFDocument = require("pdfkit");
 exports.generateFourWeekRanges = (dateStr, page = 1) => {
   const inputDate = new Date(dateStr);
 
@@ -293,3 +294,465 @@ exports.generateTasksExcelFromReport = async (data) => {
   const buf = await wb.xlsx.writeBuffer();
   return buf;
 };
+
+// exports.generateTasksPDFFromReport = async (data) => {
+//   // ✅ Step 1 — Clean data like Excel version
+//   const cleanedData = data.map((item) => ({
+//     ...item,
+//     module_names: item.module_names
+//       ? [...new Set(item.module_names.split(",").map((s) => s.trim()))].join(
+//           ", "
+//         )
+//       : "",
+
+//     report_names: item.report_names
+//       ? [...new Set(item.report_names.split(",").map((s) => s.trim()))].join(
+//           ", "
+//         )
+//       : "",
+
+//     daily_accomplishment: item.daily_accomplishment
+//       ? item.daily_accomplishment.replace(/<[^>]+>/g, "\n").trim()
+//       : "",
+
+//     resolution_and_steps: item.resolution_and_steps
+//       ? item.resolution_and_steps.replace(/<[^>]+>/g, "\n").trim()
+//       : "",
+
+//     rca_investigation: item.rca_investigation
+//       ? item.rca_investigation.replace(/<[^>]+>/g, "\n").trim()
+//       : "",
+//   }));
+
+//   // ✅ Step 2 — Create PDF
+//   const doc = new PDFDocument({ margin: 30, size: "A4" });
+//   let buffers = [];
+//   doc.on("data", buffers.push.bind(buffers));
+//   doc.on("end", () => {});
+
+//   // ✅ Header
+//   doc.fontSize(18).text("Task Report", { align: "center" });
+//   doc.moveDown(1);
+
+//   // ✅ Step 3 — Add rows
+//   cleanedData.forEach((item, index) => {
+//     doc.fontSize(12).text(`Task ID: ${item.task_id}`);
+//     doc.text(`Application: ${item.application_name}`);
+//     doc.text(`Modules: ${item.module_names}`);
+//     doc.text(`Reports: ${item.report_names}`);
+//     doc.text(`SR No: ${item.sr_no}`);
+//     doc.text(`Time: ${item.hour}h ${item.minute}m`);
+//     doc.text(`Task Type: ${item.task_type}`);
+
+//     doc.moveDown(0.5);
+
+//     doc.font("Helvetica-Bold").text("Daily Accomplishment:");
+//     doc.font("Helvetica").text(item.daily_accomplishment || "", { indent: 10 });
+
+//     doc.moveDown(0.5);
+
+//     doc.font("Helvetica-Bold").text("RCA Investigation:");
+//     doc.font("Helvetica").text(item.rca_investigation || "", { indent: 10 });
+
+//     doc.moveDown(0.5);
+
+//     doc.font("Helvetica-Bold").text("Resolution & Steps:");
+//     doc.font("Helvetica").text(item.resolution_and_steps || "", { indent: 10 });
+
+//     doc.moveDown(1);
+
+//     // ✅ Page break if needed
+//     if (doc.y > 700) doc.addPage();
+//   });
+
+//   // ✅ Finish PDF
+//   doc.end();
+
+//   return new Promise((resolve) => {
+//     doc.on("end", () => {
+//       resolve(Buffer.concat(buffers));
+//     });
+//   });
+// };
+exports.generateTasksPDFFromReport = async (data) => {
+  const PDFDocument = require("pdfkit");
+
+  const colWidths = [80, 120, 150, 150, 60, 70, 250, 250, 250];
+
+  // ✅ Step 1: measure required height
+  const temp = new PDFDocument({ margin: 20 });
+  const cleanedData = data.map((item) => ({
+    ...item,
+    module_names: item.module_names
+      ? [...new Set(item.module_names.split(",").map((s) => s.trim()))].join(
+          ", "
+        )
+      : "",
+
+    report_names: item.report_names
+      ? [...new Set(item.report_names.split(",").map((s) => s.trim()))].join(
+          ", "
+        )
+      : "",
+    daily_accomplishment: item.daily_accomplishment
+      ? (() => {
+          const html = item.daily_accomplishment;
+
+          // 1️⃣ Extract plain text inside <p> tags
+          const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
+            .map((m) => m[1].trim())
+            .filter((t) => t && t !== "&nbsp;" && t !== "");
+          // 2️⃣ Extract queries using your existing function
+          const queries =
+            this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+          // 3️⃣ Merge both results
+          return [...pTags, ...queries].join("\n");
+        })()
+      : "",
+
+    resolution_and_steps: item.resolution_and_steps
+      ? (() => {
+          const html = item.resolution_and_steps;
+
+          // 1️⃣ Extract plain text inside <p> tags
+          const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
+            .map((m) => m[1].trim())
+            .filter((t) => t && t !== "&nbsp;" && t !== "");
+          // 2️⃣ Extract queries using your existing function
+          const queries =
+            this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+          console.log("let it burn__", item.rca_investigation);
+          // 3️⃣ Merge both results
+          return [...pTags, ...queries].join("\n");
+        })()
+      : "",
+    rca_investigation: item.rca_investigation
+      ? (() => {
+          const html = item.rca_investigation;
+
+          // 1️⃣ Extract plain text inside <p> tags
+          const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)].map((m) =>
+            m[1].trim()
+          );
+          // .filter((t) => t && t !== "&nbsp;" && t !== "");
+          // 2️⃣ Extract queries using your existing function
+          const queries =
+            this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+          // 3️⃣ Merge both results
+          return [...pTags, ...queries].join("\n");
+        })()
+      : "",
+  }));
+
+  let requiredHeight = 120; // header + spacing
+
+  cleanedData.forEach((item) => {
+    const cells = [
+      item.task_id,
+      item.application_name,
+      item.module_names,
+      item.report_names,
+      `${item.hour}h ${item.minute}m`,
+      item.task_type,
+      (item.daily_accomplishment || "").replace(/<[^>]+>/g, ""),
+      (item.rca_investigation || "").replace(/<[^>]+>/g, ""),
+      (item.resolution_and_steps || "").replace(/<[^>]+>/g, ""),
+    ];
+
+    let rowHeight = 0;
+    cells.forEach((text, i) => {
+      const h = temp.heightOfString(text || "", { width: colWidths[i] - 6 });
+      if (h > rowHeight) rowHeight = h;
+    });
+
+    requiredHeight += rowHeight + 15;
+  });
+
+  temp.end();
+
+  const pageHeight = Math.max(900, requiredHeight);
+
+  // ✅ Step 2: create final PDF with dynamic height
+  const doc = new PDFDocument({
+    size: [1800, pageHeight],
+    margin: 20,
+  });
+
+  const buffers = [];
+  doc.on("data", buffers.push.bind(buffers));
+
+  return new Promise((resolve) => {
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
+
+    doc.fontSize(18).text("Task Report", { align: "center" });
+    doc.moveDown(1);
+
+    let y = doc.y;
+    const xStart = 20;
+
+    const drawCell = (x, y, w, h, text, bold = false) => {
+      doc.rect(x, y, w, h).stroke();
+      doc
+        .font(bold ? "Helvetica-Bold" : "Helvetica")
+        .fontSize(10)
+        .text(text, x + 4, y + 4, { width: w - 6 });
+    };
+
+    // ✅ Draw header
+    const headers = [
+      "Task ID",
+      "Application",
+      "Modules",
+      "Reports",
+      "Time",
+      "Type",
+      "Daily Accomplishment",
+      "RCA",
+      "Resolution",
+    ];
+
+    let headerHeight = 22;
+    let x = xStart;
+
+    headers.forEach((h, i) => {
+      drawCell(x, y, colWidths[i], headerHeight, h, true);
+      x += colWidths[i];
+    });
+
+    y += headerHeight;
+
+    // ✅ Draw rows
+    cleanedData.forEach((item) => {
+      const cells = [
+        item.task_id,
+        item.application_name,
+        item.module_names,
+        item.report_names,
+        `${item.hour}h ${item.minute}m`,
+        item.task_type,
+        (item.daily_accomplishment || "").replace(/<[^>]+>/g, ""),
+        (item.rca_investigation || "").replace(/<[^>]+>/g, ""),
+        (item.resolution_and_steps || "").replace(/<[^>]+>/g, ""),
+      ];
+
+      let rowHeight = 0;
+
+      // measure tallest cell
+      cells.forEach((text, i) => {
+        const h = doc.heightOfString(text || "", { width: colWidths[i] - 6 });
+        if (h > rowHeight) rowHeight = h;
+      });
+
+      rowHeight += 12;
+
+      x = xStart;
+
+      cells.forEach((text, i) => {
+        drawCell(x, y, colWidths[i], rowHeight, text);
+        x += colWidths[i];
+      });
+
+      y += rowHeight;
+    });
+
+    doc.end();
+  });
+};
+
+// Current
+// exports.generateTasksPDFFromReport = async (data) => {
+//   const doc = new PDFDocument({ margin: 20, size: "A4", layout: "landscape" });
+//   const buffers = [];
+//   doc.on("data", buffers.push.bind(buffers));
+
+//   const cleanedData = data.map((item) => ({
+//     ...item,
+//     module_names: item.module_names
+//       ? [...new Set(item.module_names.split(",").map((s) => s.trim()))].join(
+//           ", "
+//         )
+//       : "",
+
+//     report_names: item.report_names
+//       ? [...new Set(item.report_names.split(",").map((s) => s.trim()))].join(
+//           ", "
+//         )
+//       : "",
+//     daily_accomplishment: item.daily_accomplishment
+//       ? (() => {
+//           const html = item.daily_accomplishment;
+
+//           // 1️⃣ Extract plain text inside <p> tags
+//           const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
+//             .map((m) => m[1].trim())
+//             .filter((t) => t && t !== "&nbsp;" && t !== "");
+//           // 2️⃣ Extract queries using your existing function
+//           const queries =
+//             this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+//           // 3️⃣ Merge both results
+//           return [...pTags, ...queries].join("\n");
+//         })()
+//       : "",
+
+//     resolution_and_steps: item.resolution_and_steps
+//       ? (() => {
+//           const html = item.resolution_and_steps;
+
+//           // 1️⃣ Extract plain text inside <p> tags
+//           const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)]
+//             .map((m) => m[1].trim())
+//             .filter((t) => t && t !== "&nbsp;" && t !== "");
+//           // 2️⃣ Extract queries using your existing function
+//           const queries =
+//             this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+//           console.log("let it burn__", item.rca_investigation);
+//           // 3️⃣ Merge both results
+//           return [...pTags, ...queries].join("\n");
+//         })()
+//       : "",
+//     rca_investigation: item.rca_investigation
+//       ? (() => {
+//           const html = item.rca_investigation;
+
+//           // 1️⃣ Extract plain text inside <p> tags
+//           const pTags = [...html.matchAll(/<p[^>]*>(.*?)<\/p>/gis)].map((m) =>
+//             m[1].trim()
+//           );
+//           // .filter((t) => t && t !== "&nbsp;" && t !== "");
+//           // 2️⃣ Extract queries using your existing function
+//           const queries =
+//             this.extractQueries(html)?.map((q) => q.replace(/"/g, "'")) || [];
+
+//           // 3️⃣ Merge both results
+//           return [...pTags, ...queries].join("\n");
+//         })()
+//       : "",
+//   }));
+
+//   return new Promise((resolve) => {
+//     doc.on("end", () => resolve(Buffer.concat(buffers)));
+
+//     // ✅ Title
+//     doc.fontSize(18).text("Task Report", { align: "center" });
+//     doc.moveDown(1);
+
+//     // ✅ Table column widths
+//     const tableX = 20;
+//     // ✅ Table column widths (9 columns)
+//     const colWidths = [60, 80, 90, 90, 40, 50, 130, 130, 130];
+
+//     // ✅ Draw header row
+//     drawRow(
+//       doc,
+//       tableX,
+//       doc.y,
+//       colWidths,
+//       [
+//         "Task ID",
+//         "Application",
+//         "Modules",
+//         "Reports",
+//         "Time",
+//         "Type",
+//         "Daily Accomplishment",
+//         "RCA Investigation",
+//         "Resolution & Steps",
+//       ],
+//       true
+//     );
+
+//     // ✅ Rows
+//     cleanedData.forEach((item) => {
+//       const rowData = [
+//         item.task_id || "",
+//         item.application_name || "",
+//         item.module_names || "",
+//         item.report_names || "",
+//         `${item.hour}h ${item.minute}m`,
+//         item.task_type || "",
+//         (item.daily_accomplishment || "").replace(/<[^>]+>/g, ""),
+//         (item.rca_investigation || "").replace(/<[^>]+>/g, ""),
+//         (item.resolution_and_steps || "").replace(/<[^>]+>/g, ""),
+//       ];
+
+//       drawRow(doc, tableX, doc.y, colWidths, rowData);
+
+//       // ✅ Page break
+//       if (doc.y > 750) {
+//         doc.addPage();
+//         drawRow(
+//           doc,
+//           tableX,
+//           doc.y,
+//           colWidths,
+//           [
+//             "Task ID",
+//             "Application",
+//             "Modules",
+//             "Reports",
+//             "Time",
+//             "Type",
+//             "Daily Accomplishment",
+//             "RCA Investigation",
+//             "Resolution & Steps",
+//           ],
+//           true
+//         );
+//       }
+//     });
+
+//     doc.end();
+//   });
+// };
+
+// ✅ Helper: draw table row
+function drawRow(doc, x, y, widths, textArray, header = false) {
+  let rowHeight = 0;
+
+  // Calculate row height based on text wrapping
+  textArray.forEach((text, i) => {
+    const h = doc.heightOfString(text, { width: widths[i] - 4 });
+    if (h > rowHeight) rowHeight = h;
+  });
+
+  rowHeight += 8;
+
+  // ✅ Background for header
+  if (header) {
+    doc
+      .rect(
+        x,
+        y,
+        widths.reduce((a, b) => a + b),
+        rowHeight
+      )
+      .fill("#eeeeee");
+    doc.fillColor("black");
+  }
+
+  // ✅ Draw text
+  let xPos = x;
+  textArray.forEach((text, i) => {
+    doc.text(text, xPos + 2, y + 4, { width: widths[i] - 4 });
+    xPos += widths[i];
+  });
+
+  // ✅ Draw borders
+  doc.strokeColor("black");
+  doc
+    .rect(
+      x,
+      y,
+      widths.reduce((a, b) => a + b),
+      rowHeight
+    )
+    .stroke();
+  doc.moveDown();
+
+  doc.y = y + rowHeight;
+}

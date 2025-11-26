@@ -337,7 +337,8 @@ class TaskStatusInfoService {
             !data.description ||
             !data.status ||
             !data.ticket_id ||
-            !data.color_row
+            !data.color_row ||
+            !data.client_id
           ) {
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
@@ -349,7 +350,8 @@ class TaskStatusInfoService {
                 item == "description" ||
                 item == "status" ||
                 item == "ticket_id" ||
-                item == "color_row"
+                item == "color_row" ||
+                item == "client_id"
             )
           ) {
             await TaskStatusInfo.update(
@@ -358,6 +360,7 @@ class TaskStatusInfoService {
                 status: data.status,
                 description: data.description,
                 ticket_id: data.ticket_id,
+                client_id: data.client_id[0],
               },
               {
                 where: {
@@ -592,6 +595,7 @@ class TaskStatusInfoService {
         task_type: task.task_type,
         hour: payload.hour,
         minute: payload.minute,
+        client_id: task.client_id,
         // user_id: user_info.id,
       };
       switch (task.task_type) {
@@ -921,7 +925,7 @@ class TaskStatusInfoService {
           appName: detail.appName || "",
           modulename: detail.moduleName || "",
           reportName: detail.reportName || "",
-          clientName: detail.clientName || "",
+          clientName: detail.clientName || [],
           dailyAccomplishments: detail.daily_accomplishment,
           investigationRCA: detail.rca_investigation,
           resolutions: detail.resolution_and_steps,
