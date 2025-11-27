@@ -83,7 +83,7 @@ class TaskStatusInfoService {
           color_id: color.id,
           reportedBy: "",
           statement_of_the_issue: "",
-          // user_id: user_info.id,
+          user_id: user_info.id,
           client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
@@ -129,7 +129,7 @@ class TaskStatusInfoService {
           color_id: color.id,
           requestedBy: "",
           description: "",
-          // user_id: user_info.id,
+          user_id: user_info.id,
           client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
@@ -162,7 +162,7 @@ class TaskStatusInfoService {
           color_id: color.id,
           reportedBy: "",
           statement_of_the_issue: "",
-          // user_id: user_info.id,
+          user_id: user_info.id,
           client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
@@ -248,10 +248,11 @@ class TaskStatusInfoService {
     }
   }
 
-  static async getLegendsColorsandId() {
+  static async getLegendsColorsandId(user_info) {
     try {
       const fetchCurrentColors = await TaskStatusInfo.findAll({
         where: {
+          user_id: user_info.id,
           status: { [Op.ne]: "Completed" },
           // status: ["In Progress", "New", "Reported", "Resolved", "On Hold"],
         },
@@ -260,6 +261,7 @@ class TaskStatusInfoService {
           "sr_no",
           "task_type",
           "status",
+          "client_id",
           "ticket_id",
           "task_code",
           "id",
@@ -267,6 +269,7 @@ class TaskStatusInfoService {
         order: [["created_at", "ASC"]],
         raw: true,
       });
+
       return {
         status: 200,
         message: "Legends fetched Successfully",
@@ -317,7 +320,7 @@ class TaskStatusInfoService {
     }
   }
 
-  static async editTaskSheetInfo(params, data) {
+  static async editTaskSheetInfo(params, data, user_info) {
     try {
       const { taskId } = params;
       if (taskId) {
@@ -361,9 +364,11 @@ class TaskStatusInfoService {
                 description: data.description,
                 ticket_id: data.ticket_id,
                 client_id: data.client_id[0],
+                user_id: user_info.id,
               },
               {
                 where: {
+                  user_id: user_info.id,
                   task_code: taskId.toString(),
                 },
               }
@@ -380,7 +385,8 @@ class TaskStatusInfoService {
             !data.statement_of_the_issue ||
             !data.status ||
             !data.ticket_id ||
-            !data.color_row
+            !data.color_row ||
+            !data.client_id
           ) {
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
@@ -392,7 +398,8 @@ class TaskStatusInfoService {
                 item == "status" ||
                 item == "ticket_id" ||
                 item == "color_row" ||
-                item == "sr_no"
+                item == "sr_no" ||
+                item == "client_id"
             )
           ) {
             await TaskStatusInfo.update(
@@ -402,6 +409,8 @@ class TaskStatusInfoService {
                 statement_of_the_issue: data.statement_of_the_issue,
                 ticket_id: data.ticket_id,
                 sr_no: data.sr_no,
+                client_id: data.client_id[0],
+                user_id: user_info.id,
               },
               {
                 where: {
@@ -421,7 +430,8 @@ class TaskStatusInfoService {
             !data.description ||
             !data.status ||
             !data.ticket_id ||
-            !data.color_row
+            !data.color_row ||
+            !data.client_id
           ) {
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
@@ -433,7 +443,8 @@ class TaskStatusInfoService {
                 item == "description" ||
                 item == "status" ||
                 item == "ticket_id" ||
-                item == "color_row"
+                item == "color_row" ||
+                item == "client_id"
             )
           ) {
             await TaskStatusInfo.update(
@@ -442,6 +453,8 @@ class TaskStatusInfoService {
                 status: data.status,
                 description: data.description,
                 ticket_id: data.ticket_id,
+                client_id: data.client_id[0],
+                user_id: user_info.id,
               },
               {
                 where: {
@@ -489,7 +502,7 @@ class TaskStatusInfoService {
       const updateStatus = await TaskStatusInfo.update(
         {
           status: payload.status,
-          // user_id: user_info.id,
+          user_id: user_info.id,
         },
         {
           where: {
@@ -511,7 +524,7 @@ class TaskStatusInfoService {
           where: {
             id: findTaskDetailId.id,
             task_id: payload.taskId.toString(),
-            // user_id: user_info.id,
+            user_id: user_info.id,
           },
         }
       );
@@ -547,7 +560,7 @@ class TaskStatusInfoService {
           {
             where: {
               id: findTaskDetailId.id,
-              // user_id: user_info.id,
+              user_id: user_info.id,
               task_id: payload.taskId.toString(),
             },
           }
@@ -596,7 +609,7 @@ class TaskStatusInfoService {
         hour: payload.hour,
         minute: payload.minute,
         client_id: task.client_id,
-        // user_id: user_info.id,
+        user_id: user_info.id,
       };
       switch (task.task_type) {
         case "assignment":
@@ -722,7 +735,7 @@ class TaskStatusInfoService {
       // Step 1: fetch rows which contain HTML text
       const results = await TaskDetail.findAll({
         where: {
-          // user_id: user_info.id,
+          user_id: user_info.id,
           // task_id: TaskId,
           [Op.or]: [
             { daily_accomplishment: { [Op.iLike]: `%${query}%` } },
@@ -778,7 +791,7 @@ class TaskStatusInfoService {
           as: "taskstaskdetails",
           required: true, // only include tasks having details
           where: {
-            // user_id: user_info.id,
+            user_id: user_info.id,
             created_at: { [Op.between]: [start, end] },
           },
           attributes: [
