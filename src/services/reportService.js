@@ -125,7 +125,7 @@ class ReportInfoService {
 
   static async getTimeSheetDetails(startDate, endDate) {
     const query = `
-    SELECT
+SELECT
     td.tstatus_id,
     td.app_id,
     app.name AS application_name,
@@ -140,6 +140,8 @@ class ReportInfoService {
 
     td.hour,
     td.minute,
+    tsi.color_row,
+    tsi.ticket_id,
     td.task_type,
     td.daily_accomplishment,
     td.rca_investigation,
@@ -157,8 +159,11 @@ LEFT JOIN module_info m
 LEFT JOIN report_info r
     ON r.id = ANY ( string_to_array(td.report_id, ',')::int[] )
 
-    WHERE 
-        td.created_at BETWEEN :startDate AND :endDate
+LEFT JOIN "taskStatusInfo" tsi
+    ON tsi.id = td.tstatus_id::int
+
+WHERE 
+    td.created_at BETWEEN '2025-11-20' AND '2025-11-29'
 
 GROUP BY
     td.id, td.tstatus_id, td.app_id, app.name,
@@ -167,7 +172,7 @@ GROUP BY
     td.hour, td.minute, td.task_type,
     td.daily_accomplishment, td.rca_investigation,
     td.resolution_and_steps,
-    td.created_at, td.updated_at
+    td.created_at, td.updated_at, tsi.color_row, tsi.ticket_id
 
 ORDER BY td.created_at DESC;
   `;
