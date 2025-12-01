@@ -593,6 +593,83 @@ class TaskStatusInfoService {
     }
   }
 
+  static async getTaskReportApplicationModule(params, user_info) {
+    try {
+      const { taskId } = params;
+      const applicationModuleReportId = await TaskDetail.findAll({
+        where: { user_id: user_info.id, task_id: taskId.toString() },
+        attributes: ["app_id", "module_id", "report_id"],
+        raw: true,
+      });
+
+      // 🔥 Extract app_ids, safely handle null, empty, number, comma strings
+      const appIds = applicationModuleReportId
+        .flatMap((item) => {
+          if (!item.app_id) return [];
+          return item.app_id
+            .toString()
+            .split(",")
+            .map((id) => id.trim())
+            .filter((id) => id !== "");
+        })
+        .map((id) => Number(id))
+        .filter((id) => !isNaN(id));
+
+      const moduleIds = applicationModuleReportId
+        .flatMap((item) => {
+          if (!item.module_id) return [];
+          return item.module_id
+            .toString()
+            .split(",")
+            .map((id) => id.trim())
+            .filter((id) => id !== "");
+        })
+        .map((id) => Number(id))
+        .filter((id) => !isNaN(id));
+
+      const reportIds = applicationModuleReportId
+        .flatMap((item) => {
+          if (!item.report_id) return [];
+          return item.report_id
+            .toString()
+            .split(",")
+            .map((id) => id.trim())
+            .filter((id) => id !== "");
+        })
+        .map((id) => Number(id))
+        .filter((id) => !isNaN(id));
+
+      const ApplicationNameIds = await Application.findAll({
+        where: { id: appIds },
+        attributes: ["id", "name"],
+        raw: true,
+      });
+
+      const ModuleNameIds = await Module.findAll({
+        where: { id: moduleIds },
+        attributes: ["id", "name"],
+        raw: true,
+      });
+
+      const ReportNameIds = await Report.findAll({
+        where: { id: reportIds },
+        attributes: ["id", "name"],
+        raw: true,
+      });
+      return {
+        message: "Task Detail Entry Created Successfully!",
+        status: 201,
+        content: {
+          applicationName: ApplicationNameIds,
+          moduleName: ModuleNameIds,
+          reportName: ReportNameIds,
+        },
+      };
+    } catch (error) {
+      return { message: error.message, status: 500 };
+    }
+  }
+
   static createTaskDetailEntry = async (taskId, payload, user_info) => {
     try {
       const task = await TaskStatusInfo.findOne({

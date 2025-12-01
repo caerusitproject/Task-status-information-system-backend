@@ -8,7 +8,9 @@ const {
   getWeeklyTasks,
   updateEachTaskWeek,
   fetchQuerySuggestion,
+  getTaskReportApplicationModule,
 } = require("../services/taskStatusInfoService");
+// const { content } = require("pdfkit/js/page");
 
 const router = express.Router();
 
@@ -149,6 +151,25 @@ const editEachTaskSheetDetail = async (req, res) => {
   }
 };
 
+const viewApplicationReportTaskSheetDetail = async (req, res) => {
+  try {
+    const user_info = req.user;
+
+    const result = await getTaskReportApplicationModule(req.params, user_info);
+
+    console.log("result__", result);
+
+    res.status(result.status).json({
+      message: result.message,
+      status: result.status,
+      content: result.content,
+    });
+  } catch (error) {
+    console.error("Error fetching weekly summary:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 const fetchSuggestions = async (req, res) => {
   try {
     // const { taskId } = req.params;
@@ -179,4 +200,5 @@ module.exports = {
   getWeeklySummary,
   editEachTaskSheetDetail,
   fetchSuggestions,
+  viewApplicationReportTaskSheetDetail,
 };

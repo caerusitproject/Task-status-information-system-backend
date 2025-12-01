@@ -112,6 +112,12 @@ router.get(
   TaskController.fetchSuggestions
 );
 
+router.get(
+  "/get-application-module-report/:taskId",
+  authenticate,
+  TaskController.viewApplicationReportTaskSheetDetail
+);
+
 router.put(
   "/edit-each-task-details/:taskDetailId",
   authenticate,
