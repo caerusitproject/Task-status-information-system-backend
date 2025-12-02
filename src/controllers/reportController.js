@@ -129,7 +129,7 @@ const createPDFTimeSheetReport = async (req, res) => {
       req.body.startDate,
       req.body.endDate
     );
-
+    console.log("pdf time sheet_______", newStatusInfo);
     // ✅ Generate PDF buffer
     const pdfBuffer = await generateTasksPDFFromReport(newStatusInfo);
 

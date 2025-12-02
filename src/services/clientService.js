@@ -70,9 +70,9 @@ class ClientInfoService {
       }
 
       const result = await Clients.findAndCountAll(options);
-      if (!result.rows || result.rows.length === 0) {
-        return { message: "No clients found", status: 403 };
-      }
+      // if (!result.rows || result.rows.length === 0) {
+      //   return { message: "No clients found", status: 403 };
+      // }
 
       // If no pagination requested → return all data
       if (!page || !pageSize) {
