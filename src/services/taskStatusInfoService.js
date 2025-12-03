@@ -565,6 +565,26 @@ class TaskStatusInfoService {
             },
           }
         );
+      } else if (
+        payload.applications?.length == 0 ||
+        payload.applications == null ||
+        payload.applications == []
+      ) {
+        // Clear the app_id and module_id if no applications provided
+        await TaskDetail.update(
+          {
+            app_id: null,
+            module_id: null,
+            report_id: null,
+          },
+          {
+            where: {
+              id: findTaskDetailId.id,
+              user_id: user_info.id,
+              task_id: payload.taskId.toString(),
+            },
+          }
+        );
       }
 
       // const updateTaskDetailStatus = await TaskDetail.update(
@@ -919,12 +939,21 @@ class TaskStatusInfoService {
           let moduleName = "";
 
           if (item.app_id) {
-            const app = await Application.findOne({
-              where: { id: item.app_id },
-              raw: true,
-            });
+            const applicationIds = item.app_id?.toString().split(",");
 
-            currentAppName = { id: app?.id, appName: app?.name } || "";
+            let app = await Promise.all(
+              applicationIds.map(async (id) => {
+                const application = await Application.findOne({
+                  where: { id },
+                  raw: true,
+                });
+                return (
+                  { id: application?.id, appName: application?.name } || ""
+                );
+              })
+            );
+
+            item.appName = app;
           }
 
           if (item.report_id) {
@@ -945,7 +974,7 @@ class TaskStatusInfoService {
             item.reportName = reports;
           }
 
-          item.appName = currentAppName;
+          // item.appName = currentAppName;
 
           // ----------------------
           // MODULE NAME (single or comma separated)
