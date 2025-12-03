@@ -16,4 +16,14 @@ router.post(
 
 router.post("/generatePDFReport", ReportController.createPDFTimeSheetReport);
 
+router.post(
+  "/generatePDFReportTask",
+  ReportController.createPDFTaskSheetReport
+);
+
+router.post(
+  "/generateExcelReportTask",
+  ReportController.createExcelTaskSheetReport
+);
+
 module.exports = router;

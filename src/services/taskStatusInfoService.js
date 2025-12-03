@@ -584,7 +584,7 @@ class TaskStatusInfoService {
         const reportIds =
           payload.reportName &&
           payload.reportName.length > 0 &&
-          payload.reportName.map((r_id) => r_id).join(",");
+          payload.reportName.map((r_id) => r_id.id).join(",");
 
         await TaskDetail.update(
           {

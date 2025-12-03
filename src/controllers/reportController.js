@@ -1,8 +1,10 @@
 const ReportService = require("../services/reportService");
 const { generateWeeklySummaryPDF } = require("../util/pdfgenerator");
 const {
-  generateTasksExcelFromReport,
-  generateTasksPDFFromReport,
+  generateTimeSheetExcelFromReport,
+  generateTimeSheetPDFFromReport,
+  generateTaskViewPDFFromReport,
+  generateTaskViewExcelFromReport,
 } = require("../util/modifiers");
 // const path = require("path");
 // const fs = require("fs");
@@ -84,30 +86,21 @@ const viewReport = async (req, res) => {
 };
 
 const createExcelTimeSheetReport = async (req, res) => {
-  // try {
-  //   const newStatusInfo = await ReportService.getTimeSheetDetails(
-  //     req.body.startDate,
-  //     req.body.endDate
-  //   );
-
-  //   console.log("report array___", newStatusInfo);
-
-  //   const generateExcel = generateTasksExcelFromReport(newStatusInfo);
-  //   console.log("excel buffer__", await generateExcel);
-  //   res.status(201).json({
-  //     message: "Excel generated Successfully",
-  //   });
-  // } catch (err) {
-  //   res.status(500).json({ message: err.message });
-  // }
   try {
     const newStatusInfo = await ReportService.getTimeSheetDetails(
       req.body.startDate,
       req.body.endDate
     );
 
+    if (newStatusInfo && newStatusInfo.length == 0) {
+      res
+        .status(403)
+        .json({ message: "Excel Cannot be generated", status: 403 });
+      return;
+    }
+
     // This returns a Buffer
-    const excelBuffer = await generateTasksExcelFromReport(newStatusInfo);
+    const excelBuffer = await generateTimeSheetExcelFromReport(newStatusInfo);
 
     // Set headers so browser knows it's a file download
     res.setHeader(
@@ -130,14 +123,74 @@ const createPDFTimeSheetReport = async (req, res) => {
       req.body.endDate
     );
     console.log("pdf time sheet_______", newStatusInfo);
+
+    if (newStatusInfo && newStatusInfo.length == 0) {
+      res.status(403).json({ message: "Pdf cannot be generated", status: 403 });
+      return;
+    }
     // ✅ Generate PDF buffer
-    const pdfBuffer = await generateTasksPDFFromReport(newStatusInfo);
+    const pdfBuffer = await generateTimeSheetPDFFromReport(newStatusInfo);
 
     // ✅ Send as downloadable PDF
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=timesheet.pdf");
 
     res.status(200).send(pdfBuffer);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const createPDFTaskSheetReport = async (req, res) => {
+  try {
+    const newStatusInfo = await ReportService.getTimeSheetDetails(
+      req.body.startDate,
+      req.body.endDate
+    );
+    console.log("pdf time sheet_______", newStatusInfo);
+
+    if (newStatusInfo && newStatusInfo.length == 0) {
+      res.status(403).json({ message: "Pdf Cannot be generated", status: 403 });
+      return;
+    }
+    // ✅ Generate PDF buffer
+    const pdfBuffer = await generateTaskViewPDFFromReport(newStatusInfo);
+
+    // ✅ Send as downloadable PDF
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=timesheet.pdf");
+
+    res.status(200).send(pdfBuffer);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const createExcelTaskSheetReport = async (req, res) => {
+  try {
+    const newStatusInfo = await ReportService.getTimeSheetDetails(
+      req.body.startDate,
+      req.body.endDate
+    );
+    console.log("excel task sheet_______", newStatusInfo);
+    // ✅ Generate PDF buffer
+    const excelBuffer = await generateTaskViewExcelFromReport(newStatusInfo);
+
+    if (newStatusInfo && newStatusInfo.length == 0) {
+      res
+        .status(403)
+        .json({ message: "Excel Cannot be generated", status: 403 });
+      return;
+    }
+
+    // ✅ Send as downloadable PDF
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", "attachment; filename=timesheet.xlsx");
+
+    res.status(200).send(excelBuffer);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -195,4 +248,6 @@ module.exports = {
   viewReport,
   createExcelTimeSheetReport,
   createPDFTimeSheetReport,
+  createPDFTaskSheetReport,
+  createExcelTaskSheetReport,
 };

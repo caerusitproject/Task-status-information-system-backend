@@ -127,20 +127,19 @@ class ReportInfoService {
     const query = `
 SELECT
     td.tstatus_id,
-    td.app_id,
-    app.name AS application_name,
+    -- td.app_id,
+    -- app.name AS application_name,
 
-    td.module_id,
-    STRING_AGG(m.name, ', ') AS module_names,
-
+    -- td.module_id,
+    -- STRING_AGG(m.name, ', ') AS module_names,
     td.sr_no,
     td.task_id,
-    td.report_id,
-    STRING_AGG(r.name, ', ') AS report_names,
+    -- td.report_id,
+    -- STRING_AGG(r.name, ', ') AS report_names,
 
     td.hour,
     td.minute,
-    tsi.color_row,
+    tsi.color_row,    
     tsi.ticket_id,
     td.task_type,
     td.daily_accomplishment,
@@ -163,11 +162,13 @@ LEFT JOIN "taskStatusInfo" tsi
     ON tsi.id = td.tstatus_id::int
 
 WHERE 
-    td.created_at BETWEEN '2025-11-20' AND '2025-11-29'
+    td.created_at BETWEEN :startDate AND :endDate
 
 GROUP BY
-    td.id, td.tstatus_id, td.app_id, app.name,
-    td.module_id,
+    td.id, td.tstatus_id, 
+    -- td.app_id, 
+    -- app.name,
+    -- td.module_id,
     td.sr_no, td.task_id, td.report_id,
     td.hour, td.minute, td.task_type,
     td.daily_accomplishment, td.rca_investigation,
