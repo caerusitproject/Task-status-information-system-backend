@@ -542,10 +542,6 @@ class TaskStatusInfoService {
 
         const appIds = [...new Set(moduleData.map((m) => m.app_id))].join(",");
         const moduleIds = moduleData.map((m) => m.module_id).join(",");
-        const reportIds =
-          payload.reportName &&
-          payload.reportName.length > 0 &&
-          payload.reportName.map((r_id) => r_id).join(",");
 
         // const clientId = payload.clientId?.map((c_id) => c_id).join(",");
 
@@ -554,7 +550,6 @@ class TaskStatusInfoService {
           {
             app_id: appIds,
             module_id: moduleIds,
-            report_id: reportIds,
             // client_id: clientId,
           },
           {
@@ -575,6 +570,38 @@ class TaskStatusInfoService {
           {
             app_id: null,
             module_id: null,
+          },
+          {
+            where: {
+              id: findTaskDetailId.id,
+              user_id: user_info.id,
+              task_id: payload.taskId.toString(),
+            },
+          }
+        );
+      }
+      if (payload.reportName && payload.reportName.length > 0) {
+        const reportIds =
+          payload.reportName &&
+          payload.reportName.length > 0 &&
+          payload.reportName.map((r_id) => r_id).join(",");
+
+        await TaskDetail.update(
+          {
+            report_id: reportIds,
+          },
+          {
+            where: {
+              id: findTaskDetailId.id,
+              user_id: user_info.id,
+              task_id: payload.taskId.toString(),
+            },
+          }
+        );
+      } else if (payload.reportName && payload.reportName.length == 0) {
+        // Clear the report_id if no reportName provided
+        await TaskDetail.update(
+          {
             report_id: null,
           },
           {
@@ -586,7 +613,6 @@ class TaskStatusInfoService {
           }
         );
       }
-
       // const updateTaskDetailStatus = await TaskDetail.update(
       //   {
       //     daily_accomplishment: payload.daily_accomplishment,
