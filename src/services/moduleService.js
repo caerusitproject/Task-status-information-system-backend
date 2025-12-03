@@ -14,7 +14,7 @@ class ModuleInfoService {
     const { moduleName, moduleDescription, appid } = data;
 
     // Validate required fields
-    if (!moduleName || !moduleDescription) {
+    if (!moduleName) {
       return { message: "Invalid data provided", status: 400 };
     }
 
