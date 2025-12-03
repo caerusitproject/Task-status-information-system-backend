@@ -157,8 +157,6 @@ exports.cleanSQL = (sql) => {
 };
 
 exports.generateTimeSheetExcelFromReport = async (data) => {
-  const ExcelJS = require("exceljs");
-
   // ────────────────────────────────────────────────
   // STEP 1 — CLEAN THE DATA (same as PDF)
   // ────────────────────────────────────────────────
@@ -253,10 +251,10 @@ exports.generateTimeSheetExcelFromReport = async (data) => {
   const ws = wb.addWorksheet("Time Sheet Report");
 
   ws.columns = [
-    { header: "Task ID", key: "task_id", width: 20 },
-    { header: "Task Type", key: "task_type", width: 20 },
-    { header: "Details", key: "combined", width: 60 },
-    { header: "Time Spent", key: "time_spent", width: 15 },
+    { key: "task_id", width: 20 },
+    { key: "task_type", width: 20 },
+    { key: "combined", width: 60 },
+    { key: "time_spent", width: 15 },
   ];
 
   let excelRowIndex = 1;
