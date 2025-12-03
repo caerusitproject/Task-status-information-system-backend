@@ -252,7 +252,7 @@ class TaskStatusInfoService {
     try {
       const fetchCurrentColors = await TaskStatusInfo.findAll({
         where: {
-          user_id: user_info.id,
+          [Op.or]: [{ user_id: null }, { user_id: user_info.id }],
           status: { [Op.ne]: "Completed" },
           // status: ["In Progress", "New", "Reported", "Resolved", "On Hold"],
         },
