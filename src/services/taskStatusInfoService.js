@@ -696,6 +696,16 @@ class TaskStatusInfoService {
         where: { task_code: taskId.toString() },
         raw: true,
       });
+
+      const allAppIds = payload.applications
+        .map((a) => a.applicationId)
+        .filter((id) => id !== undefined && id !== null);
+
+      // Extract ALL moduleIds (flatten arrays)
+      const allModuleIds = payload.applications
+        .flatMap((a) => (Array.isArray(a.moduleIds) ? a.moduleIds : []))
+        .filter((id) => id !== undefined && id !== null);
+      const reportArr = payload.reportName || [];
       if (!task) throw new Error("Task Id not found");
 
       const detailData = {
@@ -707,6 +717,10 @@ class TaskStatusInfoService {
         minute: payload.minute,
         client_id: task.client_id,
         user_id: user_info.id,
+        app_id: allAppIds.length > 0 ? allAppIds.join(",") : null,
+        module_id: allModuleIds.length > 0 ? allModuleIds.join(",") : null,
+        report_id:
+          reportArr.length > 0 ? reportArr.map((r) => r.id).join(",") : null,
       };
       switch (task.task_type) {
         case "assignment":
