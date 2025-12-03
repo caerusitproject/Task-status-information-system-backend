@@ -109,16 +109,16 @@ class ModuleInfoService {
       // Validate body
       const { moduleName, moduleDescription, appid } = body;
 
-      if (!moduleName || !moduleDescription) {
+      if (!moduleName) {
         return { message: "Invalid data provided", status: 400 };
       }
 
       // ---------- UPDATE ONLY BASIC DETAILS ----------
       await Module.update(
         {
-          name: moduleName,
-          description: moduleDescription,
-          app_id: appid,
+          name: moduleName || "",
+          description: moduleDescription || "",
+          app_id: appid || null,
         },
         { where: { id: moduleId } }
       );

@@ -124,15 +124,15 @@ class ApplicationInfoService {
       // Validate body
       const { applicationName, applicationDescription, modules } = body;
 
-      if (!applicationName || !applicationDescription) {
+      if (!applicationName) {
         return { message: "Invalid data provided", status: 400 };
       }
 
       // ---------- UPDATE ONLY BASIC DETAILS ----------
       await Application.update(
         {
-          name: applicationName,
-          description: applicationDescription,
+          name: applicationName || "",
+          description: applicationDescription || "",
         },
         { where: { id: appId } }
       );

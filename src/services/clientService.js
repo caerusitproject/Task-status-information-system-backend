@@ -119,15 +119,15 @@ class ClientInfoService {
       // Validate body
       const { name, description } = body;
 
-      if (!name || !description) {
+      if (!name) {
         return { message: "Invalid data provided", status: 400 };
       }
 
       // ---------- UPDATE ONLY BASIC DETAILS ----------
       await Clients.update(
         {
-          name: name,
-          description: description,
+          name: name || "",
+          description: description || "",
         },
         { where: { id: clientId } }
       );
