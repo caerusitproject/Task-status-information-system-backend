@@ -1,20 +1,27 @@
-
-
 const Sequelize = require("sequelize");
-    const dbConfig = require("./db.config.js");
+const dbConfig = require("./db.config.js");
 
-    const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
-      host: dbConfig.HOST,
-      dialect: dbConfig.dialect,
-      pool: {
-        max: dbConfig.pool.max,
-        min: dbConfig.pool.min,
-        acquire: dbConfig.pool.acquire,
-        idle: dbConfig.pool.idle
-      }
-    });
+var sequelize = new Sequelize(
+  dbConfig.development.DB,
+  dbConfig.development.USER,
+  dbConfig.development.PASSWORD,
+  {
+    host: dbConfig.development.HOST,
+    dialect: dbConfig.development.dialect,
+    pool: {
+      max: dbConfig.development.pool.max,
+      min: dbConfig.development.pool.min,
+      acquire: dbConfig.development.pool.acquire,
+      idle: dbConfig.development.pool.idle,
+    },
+  }
+);
 
-   
-    
+if (process.env.NODE_ENV === "production") {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: dbConfig.production.dialect,
+    dialectOptions: dbConfig.production.dialectOptions,
+  });
+}
 
-    module.exports = sequelize;
+module.exports = sequelize;
