@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { Users } = require("../models");
 const { raw } = require("body-parser");
 const { where } = require("sequelize");
+const logger = require("../logger");
 require("dotenv").config();
 
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -35,7 +36,7 @@ class UserInfoService {
         password: hashedPassword,
         role: "USER",
       });
-
+      logger.info(`User registered with ID: ${user.id}`);
       return {
         message: "User registered successfully",
         status: 200,
@@ -47,6 +48,7 @@ class UserInfoService {
       };
     } catch (err) {
       console.error("Error creating user:", err);
+      logger.error(`Error registering user: ${err.message}`);
       return { message: "Internal server error", status: 500 };
     }
   }
@@ -59,10 +61,12 @@ class UserInfoService {
     try {
       const user = await Users.findOne({ where: { email_id: emailId } });
       if (!user) {
+        logger.error(`Login failed for email: ${emailId} - User not found`);
         return { message: "Invalid email or password", status: 401 };
       }
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
+        logger.error(`Login failed for email: ${emailId} - Incorrect password`);
         return { message: "Invalid email or password", status: 401 };
       }
       // Create JWT Payload
@@ -79,6 +83,7 @@ class UserInfoService {
 
       // Sign JWT token
       const token = jwt.sign(payload, process.env.JWT_SECRET);
+      logger.info(`User logged in with ID: ${user.id}`);
       // Return success + token
       return {
         message: "Login successful",

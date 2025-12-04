@@ -4,6 +4,7 @@ const { Application, ApplicationModule, Module } = require("../models");
 const { raw } = require("body-parser");
 const { where } = require("sequelize");
 const logger = require("../logger");
+const { log } = require("handlebars");
 require("dotenv").config();
 
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -141,6 +142,8 @@ class ApplicationInfoService {
         { where: { id: appId } }
       );
 
+      logger.info(`Application with ID: ${appId} updated successfully`);
+
       // ---------- UPDATE MODULE MAPPINGS ----------
       if (Array.isArray(modules)) {
         // fetch module rows
@@ -155,6 +158,7 @@ class ApplicationInfoService {
       return { message: "Application updated successfully", status: 200 };
     } catch (error) {
       console.error("Error updating Application:", error);
+      logger.error(`Error updating application: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }

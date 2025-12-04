@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { Clients } = require("../models");
 const { raw } = require("body-parser");
 const { where } = require("sequelize");
+const logger = require("../logger");
 require("dotenv").config();
 
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -24,7 +25,7 @@ class ClientInfoService {
         name: name,
         description: description,
       });
-
+      logger.info(`Client created with ID: ${clientInfo.id}`);
       //   // 2️⃣ If module IDs exist, create mapping
       //   if (Array.isArray(modules) && modules.length > 0) {
       //     const moduleData = modules.map((moduleId) => ({
@@ -41,6 +42,7 @@ class ClientInfoService {
       };
     } catch (err) {
       console.error("Error creating clients info:", err);
+      logger.error(`Error creating client: ${err.message}`);
       return { message: "Internal server error", status: 500 };
     }
   }
@@ -70,6 +72,7 @@ class ClientInfoService {
       }
 
       const result = await Clients.findAndCountAll(options);
+      logger.info(`Fetched ${result.rows.length} clients from database`);
       // if (!result.rows || result.rows.length === 0) {
       //   return { message: "No clients found", status: 403 };
       // }
@@ -99,6 +102,7 @@ class ClientInfoService {
       };
     } catch (error) {
       console.error("Error fetching Client Info:", error);
+      logger.error(`Error fetching clients: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }
@@ -113,6 +117,7 @@ class ClientInfoService {
       const client = await Clients.findByPk(clientId);
 
       if (!client) {
+        logger.error(`Client with ID: ${clientId} not found`);
         return { message: "Client not found!", status: 404 };
       }
 
@@ -131,6 +136,7 @@ class ClientInfoService {
         },
         { where: { id: clientId } }
       );
+      logger.info(`Client with ID: ${clientId} updated successfully`);
 
       // ---------- UPDATE MODULE MAPPINGS ----------
       //   if (Array.isArray(modules)) {
@@ -146,6 +152,7 @@ class ClientInfoService {
       return { message: "Client updated successfully", status: 200 };
     } catch (error) {
       console.error("Error updating Client:", error);
+      logger.error(`Error updating client: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }

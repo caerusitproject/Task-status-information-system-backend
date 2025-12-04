@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { Application, ApplicationModule, Module } = require("../models");
 const { raw } = require("body-parser");
 const { where } = require("sequelize");
+const logger = require("../logger");
 require("dotenv").config();
 
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -25,7 +26,7 @@ class ModuleInfoService {
         description: moduleDescription,
         app_id: appid,
       });
-
+      logger.info(`Module created with ID: ${moduleInfo.id}`);
       return {
         message: "Module created successfully",
         status: 200,
@@ -33,6 +34,7 @@ class ModuleInfoService {
       };
     } catch (err) {
       console.error("Error creating application info:", err);
+      logger.error(`Error creating module: ${err.message}`);
       return { message: "Internal server error", status: 500 };
     }
   }
@@ -58,6 +60,9 @@ class ModuleInfoService {
       }
 
       const result = await Module.findAndCountAll(options);
+      logger.info(
+        `Fetched ${result.rows.length} modules with pagination: ${page}, ${pageSize}`
+      );
 
       //   if (!result.rows || result.rows.length === 0) {
       //     return { message: "No Modules found", status: 403 };
@@ -88,6 +93,7 @@ class ModuleInfoService {
       };
     } catch (error) {
       console.error("Error fetching Modules Info:", error);
+      logger.error(`Error fetching modules: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }
@@ -122,10 +128,12 @@ class ModuleInfoService {
         },
         { where: { id: moduleId } }
       );
+      logger.info(`Module with ID: ${moduleId} updated successfully`);
 
       return { message: "Modules updated successfully", status: 200 };
     } catch (error) {
       console.error("Error updating Modules:", error);
+      logger.error(`Error updating module: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }
