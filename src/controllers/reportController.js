@@ -6,6 +6,7 @@ const {
   generateTaskViewPDFFromReport,
   generateTaskViewExcelFromReport,
 } = require("../util/modifiers");
+const logger = require("../logger");
 // const path = require("path");
 // const fs = require("fs");
 
@@ -93,6 +94,7 @@ const createExcelTimeSheetReport = async (req, res) => {
     );
 
     if (newStatusInfo && newStatusInfo.length == 0) {
+      logger.error("Excel Cannot be generated: No data found");
       res
         .status(403)
         .json({ message: "Excel Cannot be generated", status: 403 });
@@ -111,7 +113,9 @@ const createExcelTimeSheetReport = async (req, res) => {
 
     // Send buffer directly
     res.status(200).send(excelBuffer);
+    logger.info("Excel generated and sent successfully");
   } catch (err) {
+    logger.error(`Error generating Excel: ${err.message}`);
     res.status(500).json({ message: err.message });
   }
 };
@@ -125,6 +129,7 @@ const createPDFTimeSheetReport = async (req, res) => {
     console.log("pdf time sheet_______", newStatusInfo);
 
     if (newStatusInfo && newStatusInfo.length == 0) {
+      logger.error("PDF cannot be generated: No data found");
       res.status(403).json({ message: "Pdf cannot be generated", status: 403 });
       return;
     }
@@ -136,7 +141,9 @@ const createPDFTimeSheetReport = async (req, res) => {
     res.setHeader("Content-Disposition", "attachment; filename=timesheet.pdf");
 
     res.status(200).send(pdfBuffer);
+    logger.info("PDF generated and sent successfully");
   } catch (err) {
+    logger.error(`Error generating PDF: ${err.message}`);
     res.status(500).json({ message: err.message });
   }
 };
@@ -150,6 +157,7 @@ const createPDFTaskSheetReport = async (req, res) => {
     console.log("pdf time sheet_______", newStatusInfo);
 
     if (newStatusInfo && newStatusInfo.length == 0) {
+      logger.error("PDF Cannot be generated: No data found");
       res.status(403).json({ message: "Pdf Cannot be generated", status: 403 });
       return;
     }
@@ -161,7 +169,9 @@ const createPDFTaskSheetReport = async (req, res) => {
     res.setHeader("Content-Disposition", "attachment; filename=timesheet.pdf");
 
     res.status(200).send(pdfBuffer);
+    logger.info("PDF generated and sent successfully");
   } catch (err) {
+    logger.error(`Error generating PDF: ${err.message}`);
     res.status(500).json({ message: err.message });
   }
 };
@@ -177,6 +187,7 @@ const createExcelTaskSheetReport = async (req, res) => {
     const excelBuffer = await generateTaskViewExcelFromReport(newStatusInfo);
 
     if (newStatusInfo && newStatusInfo.length == 0) {
+      logger.error("Excel Cannot be generated: No data found");
       res
         .status(403)
         .json({ message: "Excel Cannot be generated", status: 403 });
@@ -191,7 +202,9 @@ const createExcelTaskSheetReport = async (req, res) => {
     res.setHeader("Content-Disposition", "attachment; filename=timesheet.xlsx");
 
     res.status(200).send(excelBuffer);
+    logger.info("Excel generated and sent successfully");
   } catch (err) {
+    logger.error(`Error generating Excel: ${err.message}`);
     res.status(500).json({ message: err.message });
   }
 };

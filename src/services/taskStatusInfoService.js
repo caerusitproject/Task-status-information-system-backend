@@ -22,6 +22,7 @@ const {
 } = require("../util/modifiers");
 const { raw } = require("body-parser");
 const { where, Op } = require("sequelize");
+const logger = require("../logger");
 const sequelize = require("../config/db");
 require("dotenv").config();
 
@@ -87,6 +88,9 @@ class TaskStatusInfoService {
           client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
+        logger.info(
+          `Assignment timesheet created with ID: ${taskStatusInfo.id}`
+        );
         return {
           message: "Assignment timesheet created successfully",
           status: 200,
@@ -110,6 +114,7 @@ class TaskStatusInfoService {
           !data.color_row ||
           !data.client_id
         ) {
+          logger.error("Invalid data provided for Issue timesheet creation");
           return { message: "Invalid data provided", status: 400 };
         }
         const color = await Colors.findOne({ where: { code: color_row } });
@@ -133,6 +138,7 @@ class TaskStatusInfoService {
           client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
+        logger.info(`Issue timesheet created with ID: ${taskStatusInfo.id}`);
         return {
           message: "Issue timesheet created successfully",
           status: 200,
@@ -146,6 +152,9 @@ class TaskStatusInfoService {
           !data.color_row ||
           !data.client_id
         ) {
+          logger.error(
+            "Invalid data provided for Change Request timesheet creation"
+          );
           return { message: "Invalid data provided", status: 400 };
         }
         const color = await Colors.findOne({ where: { code: color_row } });
@@ -166,12 +175,16 @@ class TaskStatusInfoService {
           client_id: clientIdString ? clientIdString : "",
           // created_by: created_by ? created_by : ''
         });
+        logger.info(
+          `Change Request timesheet created with ID: ${taskStatusInfo.id}`
+        );
         return {
           message: "Change Request timesheet created successfully",
           status: 200,
         };
       }
     } catch (error) {
+      logger.error(`Error creating Ticket Status Info: ${error.message}`);
       return {
         message: error.message,
         status: 200,
@@ -192,6 +205,7 @@ class TaskStatusInfoService {
         dateGeneration.length > 0 &&
         Array.isArray(dateGeneration)
       ) {
+        logger.info("Date generated successfully");
         return {
           message: "Date generated Successfully !",
           content: dateGeneration,
@@ -224,12 +238,14 @@ class TaskStatusInfoService {
           findSpecificTask instanceof Object &&
           Object.keys(findSpecificTask).length > 0
         ) {
+          logger.info(`Task Id fetched: ${taskId}`);
           return {
             message: "Task Id fetched Successfully",
             content: findSpecificTask,
             status: 200,
           };
         } else {
+          logger.error(`Task Id not found: ${taskId}`);
           return {
             message: "Task Id is not present",
             status: 403,
@@ -237,6 +253,7 @@ class TaskStatusInfoService {
         }
         // console.log("Unique Task", findSpecificTask);
       } else {
+        logger.error("Please Provide a valid Task Id");
         return {
           message: "Please Provide a valid Task Id",
           status: 403,
@@ -244,6 +261,7 @@ class TaskStatusInfoService {
       }
     } catch (error) {
       console.error("Error fetching Ticket Status Info:", error);
+      logger.error(`Error fetching Ticket Status Info: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }
@@ -269,6 +287,7 @@ class TaskStatusInfoService {
         order: [["created_at", "ASC"]],
         raw: true,
       });
+      logger.info("Legends fetched successfully");
 
       return {
         status: 200,
@@ -280,6 +299,7 @@ class TaskStatusInfoService {
       };
     } catch (error) {
       console.error("Error fetching Ticket Status Info:", error);
+      logger.error(`Error fetching Ticket Status Info: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }
@@ -309,13 +329,15 @@ class TaskStatusInfoService {
         attributes: ["id", "code"],
         raw: true,
       });
-
+      logger.info("Available colors fetched successfully");
       return {
         message: "Data Successfull",
         content: availableColors,
         status: 200,
       };
     } catch (error) {
+      console.error("Error fetching Available Colors:", error);
+      logger.error(`Error fetching Available Colors: ${error.message}`);
       return { message: error.message, status: 500 };
     }
   }
@@ -329,6 +351,7 @@ class TaskStatusInfoService {
           raw: true,
         });
         if (taskStatusEdit === null) {
+          logger.error(`Task Sheet not found for Task Id: ${taskId}`);
           return { message: "Task Sheet cannot be Updated!", status: 403 };
         }
         if (
@@ -343,6 +366,9 @@ class TaskStatusInfoService {
             !data.color_row ||
             !data.client_id
           ) {
+            logger.error(
+              "Invalid data provided for Assignment timesheet creation"
+            );
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
           console.log("assignment____", data);
@@ -374,6 +400,9 @@ class TaskStatusInfoService {
               }
             );
           } else {
+            logger.error(
+              "Other Attributes not allowed for Assignment timesheet update"
+            );
             return { message: "Other Attributes not allowed", status: 403 };
           }
         } else if (
@@ -388,6 +417,7 @@ class TaskStatusInfoService {
             !data.color_row ||
             !data.client_id
           ) {
+            logger.error("Invalid data provided for Issue timesheet update");
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
           if (
@@ -419,6 +449,9 @@ class TaskStatusInfoService {
               }
             );
           } else {
+            logger.error(
+              "Other Attributes not allowed for Issue timesheet update"
+            );
             return { message: "Other Attributes not allowed", status: 403 };
           }
         } else if (
@@ -433,9 +466,12 @@ class TaskStatusInfoService {
             !data.color_row ||
             !data.client_id
           ) {
+            logger.error(
+              "Invalid data provided for Change Request timesheet update"
+            );
             return { message: "Inappropriate Data in the Body", status: 403 };
           }
-          console.log("assignment____", data);
+
           if (
             Object.keys(data).every(
               (item) =>
@@ -463,15 +499,21 @@ class TaskStatusInfoService {
               }
             );
           } else {
+            logger.error(
+              "Other Attributes not allowed for Change Request timesheet update"
+            );
             return { message: "Other Attributes not allowed", status: 403 };
           }
         }
+        logger.info(`Change Request timesheet updated for Task Id: ${taskId}`);
         return { message: "Task Status Info Edited Successfully", status: 201 };
       } else {
+        logger.error("Please Provide a valid Task Id for timesheet update");
         return { message: "Task Id not found", status: 403 };
       }
     } catch (error) {
       console.error("Error fetching Ticket Status Info:", error);
+      logger.error(`Error fetching Ticket Status Info: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }
@@ -629,12 +671,16 @@ class TaskStatusInfoService {
       // );
       console.log("update____", updateTaskDetailId[0]);
       if (updateTaskDetailId && updateTaskDetailId[0] == 0) {
+        logger.error(`Time Sheet Id Mismatch for Task Id: ${payload.taskId}`);
         return { message: "Time Sheet Id Mismatch", status: 403 };
       } else {
+        logger.info(
+          `Time Sheet Updated Successfully for Task Id: ${payload.taskId}`
+        );
         return { message: "Time Sheet Updated Successfully", status: 200 };
       }
     } catch (error) {
-      console.log("error__", error);
+      logger.error(`Error updating Time Sheet: ${error.message}`);
       return { message: error.message, status: 403 };
     }
   }
@@ -702,6 +748,7 @@ class TaskStatusInfoService {
         attributes: ["id", "name"],
         raw: true,
       });
+      logger.info(`Fetched Application, Module, Report for Task Id: ${taskId}`);
       return {
         message: "Task Detail Entry Created Successfully!",
         status: 201,
@@ -712,6 +759,9 @@ class TaskStatusInfoService {
         },
       };
     } catch (error) {
+      logger.error(
+        `Error fetching Application, Module, Report: ${error.message}`
+      );
       return { message: error.message, status: 500 };
     }
   }
@@ -821,6 +871,7 @@ class TaskStatusInfoService {
       //   }
       // );
       const newDetail = await TaskDetail.create(detailData);
+      logger.info(`Task Detail Entry Created for Task Id: ${taskId}`);
       console.log("create task sheet info___", newDetail.get({ plain: true }));
       return {
         message: "Task Detail Entry Created Successfully!",
@@ -831,6 +882,7 @@ class TaskStatusInfoService {
           newDetail.get({ plain: true }),
       };
     } catch (error) {
+      logger.error(`Error creating Task Detail Entry: ${error.message}`);
       return { message: error.message, status: error.status };
     }
   };
@@ -909,11 +961,11 @@ class TaskStatusInfoService {
       const clean = filtered.map((q) => q.replace(/"/g, "'"));
       let dumpArr = clean.slice(0, 10);
 
-      console.log("Clean SQL Suggestions =>", dumpArr);
+      logger.info("Clean SQL Suggestions =>", dumpArr);
 
       return { content: clean };
     } catch (err) {
-      console.error(err);
+      logger.error(`Error fetching query suggestions: ${err.message}`);
       throw err;
     }
   };
@@ -1091,7 +1143,7 @@ class TaskStatusInfoService {
         });
       });
     });
-
+    logger.info("Grouped tasks by date successfully");
     // 🧾 Convert to array sorted by most recent date first
     const week = Object.entries(grouped)
       .map(([date, tasks]) => ({ date, tasks }))

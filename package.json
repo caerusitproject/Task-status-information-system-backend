@@ -4,8 +4,8 @@
   "description": "HRMS backend - Node.js + Postgres (Sequelize)",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js"
-    
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
