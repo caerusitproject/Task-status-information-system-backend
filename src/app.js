@@ -49,7 +49,7 @@ async function start() {
     console.log("Postgres connected");
 
     // Sync DB models (dev only). In production use migrations.
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ force: true });
     await seedColorsOnce();
     console.log("Database synchronized");
 
