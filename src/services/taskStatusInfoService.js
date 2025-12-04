@@ -22,7 +22,7 @@ const {
 } = require("../util/modifiers");
 const { raw } = require("body-parser");
 const { where, Op } = require("sequelize");
-const sequelize = require("../../config/db");
+const sequelize = require("../config/db");
 require("dotenv").config();
 
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
