@@ -53,9 +53,9 @@ async function run() {
     //process.exit(0);
   } else {
     const [admin, created] = await Users.findOrCreate({
-      where: { username },
+      where: { email_id: username },
       defaults: {
-        username,
+        email_id: username,
         password: passwordHash,
         role: "ADMIN",
         isActive: false,
