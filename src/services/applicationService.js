@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { Application, ApplicationModule, Module } = require("../models");
 const { raw } = require("body-parser");
 const { where } = require("sequelize");
+const logger = require("../logger");
 require("dotenv").config();
 
 // const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -24,24 +25,25 @@ class ApplicationInfoService {
         name: applicationName,
         description: applicationDescription,
       });
-
+      logger.info(`Application created with ID: ${applicationInfo.id}`);
       // 2️⃣ If module IDs exist, create mapping
-      if (Array.isArray(modules) && modules.length > 0) {
-        const moduleData = modules.map((moduleId) => ({
-          app_id: applicationInfo.id,
-          module_id: moduleId,
-        }));
+      // if (Array.isArray(modules) && modules.length > 0) {
+      //   const moduleData = modules.map((moduleId) => ({
+      //     app_id: applicationInfo.id,
+      //     module_id: moduleId,
+      //   }));
 
-        await ApplicationModule.bulkCreate(moduleData);
-      }
+      //   await ApplicationModule.bulkCreate(moduleData);
+      // }
 
       return {
-        message: "Application created successfully with modules",
+        message: "Application created successfully",
         status: 200,
         applicationId: applicationInfo.id,
       };
     } catch (err) {
       console.error("Error creating application info:", err);
+      logger.error(`Error creating application: ${err.message}`);
       return { message: "Internal server error", status: 500 };
     }
   }
@@ -78,6 +80,7 @@ class ApplicationInfoService {
       // if (!result.rows || result.rows.length === 0) {
       //   return { message: "No applications found", status: 403 };
       // }
+      logger.info(`Fetched ${result.rows.length} applications from database`);
 
       // If no pagination requested → return all data
       if (!page || !pageSize) {
@@ -104,6 +107,7 @@ class ApplicationInfoService {
       };
     } catch (error) {
       console.error("Error fetching Application Info:", error);
+      logger.error(`Error fetching applications: ${error.message}`);
       return { message: "Internal Server Error", status: 500 };
     }
   }

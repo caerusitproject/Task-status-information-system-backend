@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+require("./logger");
 // const { sequelize } = require('./src/models');
 
 const db = require("./models"); // import the file where all associations are defined
