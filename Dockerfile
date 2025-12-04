@@ -1,12 +1,13 @@
-FROM node:18
 
-WORKDIR /app
+FROM node:latest
 
-COPY package*.json ./
-RUN npm install
+
+WORKDIR /usr/src/app
 
 COPY . .
-ENV NODE_ENV=production
+
+RUN npm install
 
 EXPOSE 3000
-CMD ["npm", "start"]
+  # Command to run the application
+CMD ["node", "server.js"] # Replace server.js with your main entry file
