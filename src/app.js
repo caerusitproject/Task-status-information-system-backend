@@ -16,6 +16,7 @@ const taskController = require("./controllers/taskController");
 const adminController = require("./controllers/adminController");
 const reportController = require("./controllers/reportController");
 const seedColorsOnce = require("./controllers/seedcolorController");
+const seedAdminCreate = require("./seed/seed-admin");
 
 const app = express();
 app.use(cors());
@@ -54,7 +55,8 @@ async function start() {
     } else {
       await sequelize.sync();
     }
-    await seedColorsOnce();
+    await seedColorsOnce.seedColorsOnce();
+    await seedColorsOnce.run();
     console.log("Database synchronized");
 
     app.listen(PORT, () => {
