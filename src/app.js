@@ -16,7 +16,6 @@ const taskController = require("./controllers/taskController");
 const adminController = require("./controllers/adminController");
 const reportController = require("./controllers/reportController");
 const seedColorsOnce = require("./controllers/seedcolorController");
-const seedAdminCreate = require("./seed/seed-admin");
 
 const app = express();
 app.use(cors());
@@ -51,7 +50,7 @@ async function start() {
 
     // Sync DB models (dev only). In production use migrations.
     if (process.env.NODE_ENV === "development") {
-      await sequelize.sync({ alter: true });
+      await sequelize.sync({ alter: false });
     } else {
       await sequelize.sync();
     }

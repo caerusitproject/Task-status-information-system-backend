@@ -1,6 +1,6 @@
 const Colors = require("../models/colors"); // adjust path
 require("dotenv").config();
-const { sequelize, User } = require("../models");
+const { sequelize, User, Users } = require("../models");
 const bcrypt = require("bcryptjs");
 
 async function seedColorsOnce() {
@@ -43,23 +43,26 @@ async function seedColorsOnce() {
 async function run() {
   await sequelize.authenticate();
   await sequelize.sync();
-  const username = process.env.SEED_ADMIN_USER || "admin";
+  const username = process.env.SEED_ADMIN_USER || "admin@company.com";
   const password = process.env.SEED_ADMIN_PASS || "Admin@123";
   const salt = parseInt(process.env.BCRYPT_SALT || "10", 10);
   const passwordHash = bcrypt.hashSync(password, salt);
-
-  const [admin, created] = await User.findOrCreate({
-    where: { username },
-    defaults: {
-      username,
-      passwordHash,
-      role: "ADMIN",
-      fullName: "Administrator",
-    },
-  });
-
-  console.log("Admin user:", admin.username, "created?", created);
-  process.exit(0);
+  const count = await Users.count({ where: { email_id: username } });
+  if (count > 0) {
+    console.log("Admin user already exists — skipping creation.");
+    //process.exit(0);
+  } else {
+    const [admin, created] = await Users.findOrCreate({
+      where: { username },
+      defaults: {
+        username,
+        password: passwordHash,
+        role: "ADMIN",
+        isActive: false,
+      },
+    });
+    console.log("Admin user:", admin.username, "created?", created);
+  }
 }
 
 module.exports = { seedColorsOnce, run };
