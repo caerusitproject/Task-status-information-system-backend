@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const Colors = require("./colors");
 
 const TaskStatusInfo = sequelize.define(
   "taskStatusInfo",
@@ -142,6 +143,9 @@ TaskStatusInfo.addHook("afterSync", async () => {
     });
 
     if (!existing) {
+      const defaultColor = await Colors.findOne({
+        where: { code: "#ffffff56" },
+      });
       await TaskStatusInfo.create({
         ticket_id: "DEFAULT-TICKET",
         requestedBy: "system",
@@ -151,6 +155,7 @@ TaskStatusInfo.addHook("afterSync", async () => {
         statement_of_the_issue: "N/A",
         status: "New",
         color_row: "#ffffff56",
+        color_id: defaultColor ? defaultColor.id : null,
       });
       console.log("✅ Default 'ticket_less' entry created.");
     } else {
