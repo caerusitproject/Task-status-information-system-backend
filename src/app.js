@@ -75,7 +75,7 @@ async function start() {
 
     // STEP 1 — Sync DB first (creates tables)
     if (process.env.NODE_ENV === "development") {
-      await sequelize.sync({ alter: false });
+      await sequelize.sync({ force: true });
     } else {
       await sequelize.sync();
     }
