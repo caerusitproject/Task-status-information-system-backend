@@ -73,7 +73,7 @@ async function start() {
     await sequelize.authenticate();
     console.log("Postgres connected");
 
-    // STEP 1 — Sync DB first (creates tables)
+    // STEP 1 — Sync DB first (creates tables)//
     if (process.env.NODE_ENV === "development") {
       await sequelize.sync({ alter: false });
     } else {
