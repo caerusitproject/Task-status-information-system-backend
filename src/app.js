@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const { createDefaultTicket } = require("./controllers/taskController");
 require("./logger");
 // const { sequelize } = require('./src/models');
 
@@ -43,21 +44,54 @@ app.use("/api/timeSheet", require("./routes/timesheetRouter"));
 
 //app.use('/api/email/send', emailRoutes);
 
+// async function start() {
+//   try {
+//     await sequelize.authenticate();
+//     console.log("Postgres connected");
+
+//     // Sync DB models (dev only). In production use migrations.
+//     if (process.env.NODE_ENV === "development") {
+//       await sequelize.sync({ alter: false });
+//     } else {
+//       await sequelize.sync();
+//     }
+//     await seedColorsOnce.seedColorsOnce();
+//     await seedColorsOnce.run();
+//     console.log("Database synchronized");
+
+//     app.listen(PORT, () => {
+//       console.log(`Server listening on port ${PORT}`);
+//     });
+//   } catch (err) {
+//     console.error("Failed to start app", err);
+//     process.exit(1);
+//   }
+// }
+
 async function start() {
   try {
     await sequelize.authenticate();
     console.log("Postgres connected");
 
-    // Sync DB models (dev only). In production use migrations.
+    // STEP 1 — Sync DB first (creates tables)
     if (process.env.NODE_ENV === "development") {
-      await sequelize.sync({ alter: false });
+      await sequelize.sync({ force: true });
     } else {
       await sequelize.sync();
     }
-    await seedColorsOnce.seedColorsOnce();
-    await seedColorsOnce.run();
-    console.log("Database synchronized");
+    console.log("DB synced — tables created");
 
+    // STEP 2 — Seed Colors (NOW the table exists)
+    await seedColorsOnce.seedColorsOnce();
+
+    // STEP 3 — Admin creation (requires Users table)
+    await seedColorsOnce.run();
+
+    await createDefaultTicket();
+
+    console.log("Seeding completed");
+
+    // STEP 4 — Start API
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
