@@ -626,7 +626,7 @@ class TaskStatusInfoService {
         const reportIds =
           payload.reportName &&
           payload.reportName.length > 0 &&
-          payload.reportName.map((r_id) => r_id.id).join(",");
+          payload.reportName.map((r_id) => r_id).join(",");
 
         await TaskDetail.update(
           {
@@ -796,7 +796,7 @@ class TaskStatusInfoService {
         app_id: allAppIds.length > 0 ? allAppIds.join(",") : null,
         module_id: allModuleIds.length > 0 ? allModuleIds.join(",") : null,
         report_id:
-          reportArr.length > 0 ? reportArr.map((r) => r.id).join(",") : null,
+          reportArr.length > 0 ? reportArr.map((r) => r).join(",") : null,
       };
       switch (task.task_type) {
         case "assignment":
