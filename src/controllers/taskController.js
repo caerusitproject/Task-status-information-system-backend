@@ -1,5 +1,5 @@
 const express = require("express");
-const { Task } = require("../models");
+const { Task, TaskStatusInfo, Colors } = require("../models");
 const auditService = require("../services/auditService");
 const { authorizeRoles } = require("../middlewares/auth");
 const {
@@ -194,6 +194,39 @@ const fetchSuggestions = async (req, res) => {
   }
 };
 
+const createDefaultTicket = async () => {
+  try {
+    const existing = await TaskStatusInfo.findOne({
+      where: { ticket_id: "DEFAULT-TICKET" },
+    });
+
+    if (existing) {
+      console.log("Default 'ticket_less' entry already exists.");
+      return;
+    }
+
+    const defaultColor = await Colors.findOne({
+      where: { code: "#ffffff56" },
+    });
+
+    await TaskStatusInfo.create({
+      ticket_id: "DEFAULT-TICKET",
+      requestedBy: "system",
+      reportedBy: "system",
+      task_type: "ticket_less",
+      description: "Default entry for ticket_less task type.",
+      statement_of_the_issue: "N/A",
+      status: "New",
+      color_row: "#ffffff56",
+      color_id: defaultColor ? defaultColor.id : null,
+    });
+
+    console.log("Default ticket created with color_id:", defaultColor?.id);
+  } catch (error) {
+    console.error("❌ Error inserting default entry:", error);
+  }
+};
+
 module.exports = {
   router,
   createTaskDetail,
@@ -201,4 +234,5 @@ module.exports = {
   editEachTaskSheetDetail,
   fetchSuggestions,
   viewApplicationReportTaskSheetDetail,
+  createDefaultTicket,
 };

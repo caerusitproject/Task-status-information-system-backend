@@ -136,36 +136,36 @@ TaskStatusInfo.addHook("afterCreate", async (task) => {
   await task.update({ task_code: newCode });
 });
 
-TaskStatusInfo.addHook("afterSync", async () => {
-  try {
-    const existing = await TaskStatusInfo.findOne({
-      where: { ticket_id: "DEFAULT-TICKET" },
-    });
+// TaskStatusInfo.addHook("afterSync", async () => {
+//   try {
+//     const existing = await TaskStatusInfo.findOne({
+//       where: { ticket_id: "DEFAULT-TICKET" },
+//     });
 
-    if (!existing) {
-      const defaultColor = await Colors.findOne({
-        where: { code: "#ffffff56" },
-      });
-      await TaskStatusInfo.create({
-        ticket_id: "DEFAULT-TICKET",
-        requestedBy: "system",
-        reportedBy: "system",
-        task_type: "ticket_less",
-        description: "Default entry for ticket_less task type.",
-        statement_of_the_issue: "N/A",
-        status: "New",
-        color_row: "#ffffff56",
-        color_id: defaultColor ? defaultColor.id : null,
-      });
-      console.log("✅ Default 'ticket_less' entry created.");
-    } else {
-      console.log(
-        "Default 'ticket_less' entry already exists. Skipping insert."
-      );
-    }
-  } catch (error) {
-    console.error("❌ Error inserting default entry:", error);
-  }
-});
+//     if (!existing) {
+//       const defaultColor = await Colors.findOne({
+//         where: { code: "#ffffff56" },
+//       });
+//       await TaskStatusInfo.create({
+//         ticket_id: "DEFAULT-TICKET",
+//         requestedBy: "system",
+//         reportedBy: "system",
+//         task_type: "ticket_less",
+//         description: "Default entry for ticket_less task type.",
+//         statement_of_the_issue: "N/A",
+//         status: "New",
+//         color_row: "#ffffff56",
+//         color_id: defaultColor ? defaultColor.id : null,
+//       });
+//       console.log("✅ Default 'ticket_less' entry created.");
+//     } else {
+//       console.log(
+//         "Default 'ticket_less' entry already exists. Skipping insert."
+//       );
+//     }
+//   } catch (error) {
+//     console.error("❌ Error inserting default entry:", error);
+//   }
+// });
 
 module.exports = TaskStatusInfo;

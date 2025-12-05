@@ -10,6 +10,7 @@ const dbInfo = {};
 dbInfo.Users = require("./Users");
 dbInfo.Clients = require("./Clients");
 // dbInfo.UserClientMap = require("./UserClientMap");
+dbInfo.Colors = require("./colors");
 dbInfo.Application = require("./Application");
 dbInfo.Module = require("./Module");
 dbInfo.ApplicationModule = require("./ApplicationModule");
@@ -19,7 +20,6 @@ dbInfo.TaskExecutionStatus = require("./taskExecutionStatus");
 dbInfo.TaskStatusAuditTrail = require("./taskStatusAuditTrail");
 dbInfo.TaskStatusInfo = require("./taskStatusInfo");
 dbInfo.TaskDetail = require("./taskDetails");
-dbInfo.Colors = require("./colors");
 
 // 🧩 Debug: Log model import status
 console.log("🧠 Model files loaded:");
